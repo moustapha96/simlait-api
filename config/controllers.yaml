@@ -1,0 +1,33 @@
+services:
+  App\Controller\StatController:
+    public: true
+    tags: ["controller.service_arguments"]
+    calls:
+      - setContainer: ["@service_container"]
+
+  App\Controller\MyCollecteController:
+    public: true
+    tags: ["controller.service_arguments"]
+    calls:
+      - setContainer: ["@service_container"]
+  App\Controller\MyDynamicController:
+    public: true
+    tags: ["controller.service_arguments"]
+    calls:
+      - setContainer: ["@service_container"]
+  App\Controller\MyProduitController:
+    public: true
+    tags: ["controller.service_arguments"]
+    calls:
+      - setContainer: ["@service_container"]
+  App\Controller\MyResetPassWordController:
+    public: true
+    tags: ["controller.service_arguments"]
+    calls:
+      - setContainer: ["@service_container"]
+
+  App\Controller\MyUniteDemandesController:
+    public: true
+    tags: ["controller.service_arguments"]
+    calls:
+      - setContainer: ["@service_container"]
