@@ -33,7 +33,7 @@ class Emballage
     private $description;
 
 
-    #[ORM\Column(type: 'boolean')] 
+    #[ORM\Column(type: 'boolean')]
     #[Groups(["read", "write"])]
     private $statut;
 
@@ -41,8 +41,6 @@ class Emballage
 
     public function __construct()
     {
-        $this->conditionnements = new ArrayCollection();
-        $this->collectes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -74,7 +72,7 @@ class Emballage
         return $this;
     }
 
- 
+
     public function getStatut(): ?bool
     {
         return $this->statut;
@@ -89,19 +87,16 @@ class Emballage
     public function asArray(): array
     {
         return [
-            'id'=> $this->getId(),
+            'id' => $this->getId(),
             'nom' => $this->nom,
             'description' => $this->description,
             'statut' => $this->statut,
-            
-        ];
 
+        ];
     }
 
     public function isStatut(): ?bool
     {
         return $this->statut;
     }
-  
-   
 }

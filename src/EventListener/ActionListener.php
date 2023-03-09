@@ -10,26 +10,19 @@ use Symfony\Component\HttpKernel\Event\RequestEvent;
 
 
 use App\Entity\User;
-use App\Entity\UserMobile;
 use App\Repository\NotificationRepository;
 use App\Repository\ParametrageMobileRepository;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 
-use Doctrine\ORM\Event\LifecycleEventArgs;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Contracts\EventDispatcher\Event;
 
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use Symfony\Component\Filesystem\Path;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 
 class ActionListener  extends Event implements EventSubscriberInterface
@@ -44,20 +37,14 @@ class ActionListener  extends Event implements EventSubscriberInterface
 
 
     public function __construct(
-        ManagerRegistry $doctrine,
         LoggerInterface $logger,
         EntityManagerInterface $entityManager,
-        TokenStorageInterface $tokenStorageInterface,
-        JWTTokenManagerInterface $jwtManager,
         TokenStorageInterface  $tokenStorage,
         ParametrageMobileRepository $paramsRepo,
         NotificationRepository $notificationRepository
     ) {
         $this->logger = $logger;
-        $this->jwtManager = $jwtManager;
-        $this->tokenStorageInterface = $tokenStorageInterface;
         $this->tokenStorage = $tokenStorage;
-        $this->doctrine = $doctrine;
         $this->entityManager = $entityManager;
         $this->paramsRepo = $paramsRepo;
         $this->notificationRepository = $notificationRepository;

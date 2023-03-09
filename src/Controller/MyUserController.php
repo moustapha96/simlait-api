@@ -50,31 +50,45 @@ class MyUserController extends AbstractController
     /**
      * @Route("/users/register",name="create_account", methods={"POST"})
      */
-    public function register(MailerInterface $mailer, Request $request, UserRepository $repo, EntityManagerInterface $entityManager): ?Response
+    public function register(MailerInterface $mailer, UserRepository $userRepository, Request $request, UserRepository $repo, EntityManagerInterface $entityManager): ?Response
     {
         $data  = json_decode($request->getContent(), true);
         $user = new User();
         $user->setFirstName($data['firstName']);
-        $user->setEmail($data['email']);
+        $user->setEmail($data['email']) || null;
         $user->setEnabled($data['enabled']);
-        $date = new \DateTime($data['isActiveNow']);
+
+        $user->setAdresse($data['adresse']);
+        $user->setSexe($data['sexe']);
+
+        $date = new \DateTime('now');
         $datei = DateTimeImmutable::createFromMutable($date);
         $user->setLastActivityAt($datei);
         $user->setLastName($data['lastName']);
-        $user->setAvatar($data['avatar']);
-        $user->setPhone($data['phone']);
+        // $user->setAvatar();
+
         $user->setRoles($data['roles']);
         $user->setStatus($data['status']);
         $user->setIsActiveNow(false);
+
+        $userExit = $userRepository->findOneBy(['phone' => $data['phone']]);
+        if ($userExit) {
+            return new Response("Numéro de téléphone existe déjà", 400);
+        }
+
+        $user->setPhone($data['phone']);
         $hashedPassword = $this->passwordEncoder->hashPassword(
             $user,
             $data['password']
         );
         $user->setPassword($hashedPassword);
-        $users = $repo->findBy(['email' => $user->getEmail()]);
-        if ($users) {
-            return new JsonResponse(["adresse email existe deja "], 500);
+        if ($user->getEmail() != null) {
+            $users = $repo->findBy(['email' => $user->getEmail()]);
+            if ($users) {
+                return new JsonResponse("adresse email existe déjà ", 400);
+            }
         }
+
 
         $entityManager->persist($user);
         $entityManager->flush();
@@ -82,12 +96,52 @@ class MyUserController extends AbstractController
         $usersAdmin = $repo->findBy(['roles' => "ROLE_ADMIN"]);
 
         if (count($usersAdmin) != 0) {
-            foreach ($usersAdmin as $u) {
+
+            if ($user->getEmail() != null) {
+                foreach ($usersAdmin as $u) {
+                    $email = (new TemplatedEmail())
+                        ->from('simlait@pdefs.com')
+                        ->to($u->getEmail())
+                        ->cc($user->getEmail())
+                        ->bcc('khouma964@gmail.com')
+                        ->subject('Ouverture de Compte')
+                        ->htmlTemplate('main/mailOuvertureCompte.html.twig')
+                        ->context([
+                            'user' => $user,
+                        ]);
+                    $mailer->send($email);
+                }
+            } else {
+                foreach ($usersAdmin as $u) {
+                    $email = (new TemplatedEmail())
+                        ->from('simlait@pdefs.com')
+                        ->to($u->getEmail())
+                        ->bcc('khouma964@gmail.com')
+                        ->subject('Ouverture de Compte')
+                        ->htmlTemplate('main/mailOuvertureCompte.html.twig')
+                        ->context([
+                            'user' => $user,
+                        ]);
+                    $mailer->send($email);
+                }
+            }
+        } else {
+            if ($user->getEmail() != null) {
+
                 $email = (new TemplatedEmail())
                     ->from('simlait@pdefs.com')
-                    ->to($u->getEmail())
+                    ->to("simlait-admin@pdefs.com")
                     ->cc($user->getEmail())
-                    ->bcc('khouma964@gmail.com')
+                    ->subject('Ouverture de Compte')
+                    ->htmlTemplate('main/mailOuvertureCompte.html.twig')
+                    ->context([
+                        'user' => $user,
+                    ]);
+                $mailer->send($email);
+            } else {
+                $email = (new TemplatedEmail())
+                    ->from('simlait@pdefs.com')
+                    ->to("simlait-admin@pdefs.com")
                     ->subject('Ouverture de Compte')
                     ->htmlTemplate('main/mailOuvertureCompte.html.twig')
                     ->context([
@@ -95,45 +149,44 @@ class MyUserController extends AbstractController
                     ]);
                 $mailer->send($email);
             }
-        } else {
-            $email = (new TemplatedEmail())
-                ->from('simlait@pdefs.com')
-                ->to("simlait-admin@pdefs.com")
-                ->cc($user->getEmail())
-                ->bcc('bcc@example.com')
-                ->subject('Ouverture de Compte')
-                ->htmlTemplate('main/mailOuvertureCompte.html.twig')
-                ->context([
-                    'user' => $user,
-                ]);
-            $mailer->send($email);
         }
 
-        return new JsonResponse(["utilisateur créer avec succès "], 200);
+        return new JsonResponse("utilisateur créer avec succès ", 200);
     }
 
     /**
      * @Route("/api/users/profil", name="user_profil", methods={"POST"} )
      */
-    public function updateProfil(MailerInterface $mailer, Request $request, UserRepository $repo, EntityManagerInterface  $entityManager)
+    public function updateProfil(MailerInterface $mailer, UserRepository $userRepository, Request $request, UserRepository $repo, EntityManagerInterface  $entityManager)
     {
 
         $data  = json_decode($request->getContent(), true);
         $user = $repo->find($data['id']);
-        $email = $data['email'];
-        $emails = $repo->findBy(['email' => $data['email']]);
+        $email = $data['email'] || null;
+        if ($email != null) {
+            $emails = $repo->findBy(['email' => $data['email']]);
 
-        $temoins = false;
-        foreach ($emails as $e) {
-            if ($e->getEmail()  == $email && $e->getId() != $user->getId()) {
-                $temoins = true;
+            $temoins = false;
+            foreach ($emails as $e) {
+                if ($e->getEmail()  == $email && $e->getId() != $user->getId()) {
+                    $temoins = true;
+                }
             }
-        }
-        if ($temoins) {
-            return new JsonResponse(["Email deja existant "], 500);
+            if ($temoins) {
+                return new JsonResponse("Email déjà existant ", 400);
+            }
+            $user->setEmail($data['email']);
+        } else {
+            $user->setEmail(null);
         }
 
-        $user->setEmail($data['email']);
+
+        $userExit = $userRepository->findOneBy(['phone' => $data['phone']]);
+        if ($userExit && $user->getId() != $userExit->getId()) {
+            return new Response("Numéro de téléphone existe déjà", 400);
+        }
+
+
         $user->setFirstName($data['firstName']);
         $user->setLastName($data['lastName']);
         $user->setPhone($data['phone']);
@@ -153,36 +206,52 @@ class MyUserController extends AbstractController
         String $email
     ): ?Response {
         try {
-            $criteria = ['email' => $email];
-            $user = $repo->findOneBy($criteria);
+            $criteria1 = ['email' => $email];
+            $criteria2 = ['phone' => $email];
+            $user = $repo->findOneBy($criteria1);
             if ($user ==  null) {
-                throw  new  NotFoundHttpException(" user avec l'email $email non trouvé");
+                // throw  new  NotFoundHttpException("user avec l'email $email non trouvé");
+                $user = $repo->findOneBy($criteria2);
+                if ($user == null) throw  new  NotFoundHttpException("user avec l'email ou telephone non trouvé");
             }
             return new JsonResponse($user, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            $resultat =  ["RESULTAT", ['code' => 500, "err" => $e->getMessage()]];
 
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
+
 
 
     /**
      * @Route("/api/users/update", name="user_update", methods={"POST"} )
      */
-    public function update(MailerInterface $mailer, Request $request, UserRepository $repo, EntityManagerInterface  $entityManager)
+    public function update(MailerInterface $mailer, UserRepository $userRepository, Request $request, UserRepository $repo, EntityManagerInterface  $entityManager)
     {
         $data  = json_decode($request->getContent(), true);
 
         $user = $repo->find($data['id']);
         $etat = $user->getEnabled();
         $status = $user->getStatus();
-
+        $email = $data['email'] || null;
         $user->setFirstName($data['firstName']);
-        // $user->setEmail($data['email']);
+
         $user->setEnabled($data['enabled']);
         $user->setLastName($data['lastName']);
+
         $user->setPhone($data['phone']);
+        $userExit = $userRepository->findOneBy(['phone' => $data['phone']]);
+        if ($userExit) {
+            return new Response("Numéro de téléphone existe déjà", 400);
+        }
+
+        if ($user->getEmail() != null) {
+            $users = $repo->findBy(['email' => $user->getEmail()]);
+            if ($users) {
+                return new JsonResponse(["adresse email existe deja "], 500);
+            }
+        }
+        $user->setEmail($email);
         $user->setStatus($data['status']);
         $user->setRoles($data['roles']);
 
@@ -192,7 +261,7 @@ class MyUserController extends AbstractController
         $entityManager->persist($user);
         $entityManager->flush();
 
-        if ($user && $user->getEnabled() != $etat) {
+        if ($user && $user->getEnabled() != $etat && $user->getEmail() != null) {
             $email = (new TemplatedEmail())
                 ->from('simlait@pdefs.com')
                 ->to($user->getEmail())
@@ -203,7 +272,7 @@ class MyUserController extends AbstractController
                 ]);
             $mailer->send($email);
         }
-        if ($user && $status == $user->getStatus()) {
+        if ($user && $status == $user->getStatus()  && $user->getEmail() != null) {
             $email = (new TemplatedEmail())
                 ->from('simlait@pdefs.com')
                 ->to($user->getEmail())
@@ -215,7 +284,7 @@ class MyUserController extends AbstractController
             $mailer->send($email);
         }
 
-        return new JsonResponse(["utilisateur mise a jour  avec succes "], 200);
+        return new JsonResponse("utilisateur mise à jour  avec succes ", 200);
     }
 
     // /**
@@ -286,8 +355,6 @@ class MyUserController extends AbstractController
         LoggerInterface $logger,
         EntityManagerInterface $entityManager
     ): ?Response {
-
-        // $logger->info("requette", ['requette' => $request]);
         try {
             $data = json_decode($request->getContent(), true);
             $password = $data['password'];
@@ -295,11 +362,8 @@ class MyUserController extends AbstractController
             $criteria = ['password' => $password, 'email' => $email];
 
             $user = $repo->findOneBy($criteria);
-            // $logger->info('User logged in', ['user' => $user]);
             if ($user ==  null) {
-                // $logger->critical("Email non valide", ['email' => $email]);
                 return new JsonResponse('Compte avec ces identifiants non trouvé', 400, ["Content-Type" => "application/json"]);
-                // throw  new  NotFoundHttpException(" user avec l'email $email non trouvé");
             }
             return new JsonResponse($user->asArray(), 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
@@ -307,8 +371,31 @@ class MyUserController extends AbstractController
         }
     }
 
+    /**
+     * @Route("/api/user_mobiles/findByTel", name="app_get_user_tel",methods={"POST"})
+     */
+    public function getOneUserMobileByTel(
+        Request $request,
+        UserMobileRepository $repo
+    ): ?Response {
 
 
+        try {
+            $data = json_decode($request->getContent(), true);
+            $password = $data['password'];
+            $tel = $data['telephone'];
+            $criteria = ['password' => $password, 'telephone' => $tel];
+
+            $user = $repo->findOneBy($criteria);
+            if ($user ==  null) {
+                return new JsonResponse('Compte avec ces identifiants non trouvé', 400, ["Content-Type" => "application/json"]);
+            }
+            return new JsonResponse($user->asArray(), 200, ["Content-Type" => "application/json"]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['err' => $e->getMessage()], 400);
+        }
+        return new JsonResponse(false, 400);
+    }
 
     /**
      * @Route("/api/findUser/{email}", name="app_get_user",methods={"GET"})

@@ -171,6 +171,94 @@ class CollecteRepository extends ServiceEntityRepository
         }
     }
 
+    public function findAllByCriteria(
+        string $region,
+        string $department,
+        string $zone,
+        string $produit,
+        string $conditionnement,
+        string $unites,
+        string $emballage,
+        string $dateDebut,
+        string $dateFin
+    ) {
+
+
+        if ($dateDebut != null && $dateFin != null) {
+            $dd = new \DateTime($dateDebut);
+            $df = new \DateTime($dateFin);
+
+            $qb = $this->createQueryBuilder('col');
+            $qb->addSelect('condi')->join('col.conditionnements', 'condi')
+                ->addSelect('lait')->join('col.unites', 'lait')
+                ->addSelect('emb')->join('col.emballages', 'emb')
+                ->addSelect('prod')->join('col.produits', 'prod')
+
+                ->addSelect('profil')->join('lait.profil', 'profil')
+
+                ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.region = reg')
+                ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.zone = zon')
+                ->innerJoin('App\Entity\Departement', 'depart', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.departement = depart')
+
+
+                ->where($qb->expr()->andX($qb->expr()->andX(
+                    $qb->expr()->like('prod.nom', ':produit'),
+                    $qb->expr()->like('condi.nom', ':conditionnement'),
+                    $qb->expr()->like('lait.nom', ':laiterie'),
+                    $qb->expr()->like('emb.nom', ':emballage'),
+                    $qb->expr()->like('zon.nom', ':zone'),
+                    $qb->expr()->like('depart.nom', ':departement'),
+                    $qb->expr()->like('reg.nom', ':region'),
+                    $qb->expr()->between('col.dateCollecte', ':dateDebut', ':dateFin'),
+
+                )))
+                ->setParameter('produit', '%' . $produit . '%')
+                ->setParameter('conditionnement', '%' . $conditionnement . '%')
+                ->setParameter('laiterie', '%' . $unites . '%')
+                ->setParameter('zone', '%' . $zone . '%')
+                ->setParameter('departement', '%' . $department . '%')
+                ->setParameter('emballage', '%' . $emballage . '%')
+                ->setParameter('region', '%' . $region . '%')
+                ->setParameter('dateDebut', $dd)
+                ->setParameter('dateFin', $df)
+                ->orderBy('col.id', 'DESC');
+            return $qb->getQuery()->getResult();
+        } else {
+            $qb = $this->createQueryBuilder('col');
+            $qb->addSelect('condi')->join('col.conditionnements', 'condi')
+                ->addSelect('lait')->join('col.unites', 'lait')
+                ->addSelect('emb')->join('col.emballages', 'emb')
+                ->addSelect('prod')->join('col.produits', 'prod')
+                ->addSelect('profil')->join('lait.profil', 'profil')
+
+
+                ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.region = reg')
+                ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.zone = zon')
+                ->innerJoin('App\Entity\Departement', 'depart', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.departement = depart')
+
+
+                ->where($qb->expr()->andX($qb->expr()->andX(
+                    $qb->expr()->like('prod.nom', ':produit'),
+                    $qb->expr()->like('condi.nom', ':conditionnement'),
+                    $qb->expr()->like('lait.nom', ':laiterie'),
+                    $qb->expr()->like('emb.nom', ':emballage'),
+                    $qb->expr()->like('zon.nom', ':zone'),
+                    $qb->expr()->like('depart.nom', ':departement'),
+                    $qb->expr()->like('reg.nom', ':region'),
+                )))
+
+                ->setParameter('produit', '%' . $produit . '%')
+                ->setParameter('conditionnement', '%' . $conditionnement . '%')
+                ->setParameter('laiterie', '%' . $unites . '%')
+                ->setParameter('zone', '%' . $zone . '%')
+                ->setParameter('departement', '%' . $department . '%')
+                ->setParameter('emballage', '%' . $emballage . '%')
+                ->setParameter('region', '%' . $region . '%')
+                ->orderBy('col.id', 'DESC');
+            return $qb->getQuery()->getResult();
+        }
+    }
+
 
     public function findParCriteria(
         string $profil,
@@ -308,6 +396,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('prod.nom as produit')
                 ->addSelect('MAX (col.prix) as prix_max')
                 ->addSelect('MIN (col.prix) as prix_min')
+                ->addSelect('AVG (col.prix) as prix_moyen')
                 ->where($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->between('col.dateCollecte', ':dateDebut', ':dateFin'),
                 )))
@@ -329,6 +418,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('col as collecte')
                 ->addSelect('MAX (col.prix) as prix_max')
                 ->addSelect('MIN (col.prix) as prix_min')
+                ->addSelect('AVG (col.prix) as prix_moyen')
                 ->addSelect('SUM(col.quantite) as quantite_total')
                 ->where('col.isCertified = true')
                 ->groupBy('prod.id')
@@ -362,11 +452,10 @@ class CollecteRepository extends ServiceEntityRepository
                 ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.zone = zon')
                 ->innerJoin('App\Entity\Departement', 'depart', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.departement = depart')
 
-
-
                 ->addSelect('prod.nom as produit')
                 ->addSelect('MAX (col.prix) as prix_max')
                 ->addSelect('MIN (col.prix) as prix_min')
+                ->addSelect('AVG (col.prix) as prix_moyen')
                 ->where($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('zon.nom', ':zone'),
                     $qb->expr()->like('depart.nom', ':departement'),
@@ -398,6 +487,8 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('col as collecte')
                 ->addSelect('MAX (col.prix) as prix_max')
                 ->addSelect('MIN (col.prix) as prix_min')
+                ->addSelect('AVG (col.prix) as prix_moyen')
+
                 ->addSelect('SUM(col.quantite) as quantite_total')
                 ->where($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('zon.nom', ':zone'),
@@ -938,6 +1029,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('SUM(collecte.quantite_autre) as quantite_autre')
                 ->addSelect('SUM(collecte.quantite_vendu) as quantite_vendu')
                 ->addSelect('condi.nom as conditionnement')
+                ->addSelect('AVG(collecte.prix) as prix_moyen')
                 ->where('collecte.isCertified = true')
 
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
@@ -987,6 +1079,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('SUM(collecte.quantite_autre) as quantite_autre')
                 ->addSelect('SUM(collecte.quantite_vendu) as quantite_vendu')
                 ->addSelect('condi.nom as conditionnement')
+                ->addSelect('AVG(collecte.prix) as prix_moyen')
                 ->where('collecte.isCertified = true')
 
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
@@ -1049,6 +1142,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('SUM(collecte.quantite_perdu) as quantite_perdu')
                 ->addSelect('SUM(collecte.quantite_autre) as quantite_autre')
                 ->addSelect('SUM(collecte.quantite_vendu) as quantite_vendu')
+                ->addSelect('AVG(collecte.prix) as prix_moyen')
                 ->addSelect('unit.nom as unites')
                 ->addSelect('condi.nom as conditionnement')
                 ->addSelect('emb.nom as emballage')
@@ -1106,6 +1200,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('SUM(collecte.quantite_perdu) as quantite_perdu')
                 ->addSelect('SUM(collecte.quantite_autre) as quantite_autre')
                 ->addSelect('SUM(collecte.quantite_vendu) as quantite_vendu')
+                ->addSelect('AVG(collecte.prix) as prix_moyen')
                 ->addSelect('unit.nom as unites')
                 ->addSelect('condi.nom as conditionnement')
                 ->addSelect('emb.nom as emballage')
@@ -1170,6 +1265,7 @@ class CollecteRepository extends ServiceEntityRepository
             $qb->select('prod.nom  as produit , prod.unite as unite')
                 ->addSelect('MAX (collecte.prix) as prix_max')
                 ->addSelect('MIN (collecte.prix) as prix_min')
+                ->addSelect('AVG (collecte.prix) as prix_moyen')
                 ->addSelect('SUM(collecte.quantite) as quantite_total')
                 ->addSelect('SUM(collecte.quantite_perdu) as quantite_perdu')
                 ->addSelect('SUM(collecte.quantite_autre) as quantite_autre')
@@ -1226,6 +1322,7 @@ class CollecteRepository extends ServiceEntityRepository
             $qb->select('prod.nom  as produit , prod.unite as unite')
                 ->addSelect('MAX (collecte.prix) as prix_max')
                 ->addSelect('MIN (collecte.prix) as prix_min')
+                ->addSelect('AVG (collecte.prix) as prix_moyen')
                 ->addSelect('SUM(collecte.quantite) as quantite_total')
                 ->addSelect('SUM(collecte.quantite_perdu) as quantite_perdu')
                 ->addSelect('SUM(collecte.quantite_autre) as quantite_autre')
@@ -1301,6 +1398,7 @@ class CollecteRepository extends ServiceEntityRepository
             $qb->select('prod.nom  as produit, prod.unite')
                 ->addSelect('MAX (collecte.prix) as prix_max')
                 ->addSelect('MIN (collecte.prix) as prix_min')
+                ->addSelect('AVG(collecte.prix) as prix_moyen')
                 ->addSelect('unit.nom as unites')
                 ->addSelect('emb.nom as emballage')
                 ->addSelect('condi.nom as conditionnement')
@@ -1358,6 +1456,7 @@ class CollecteRepository extends ServiceEntityRepository
             $qb->select('prod.nom  as produit, prod.unite')
                 ->addSelect('MAX (collecte.prix) as prix_max')
                 ->addSelect('MIN (collecte.prix) as prix_min')
+                ->addSelect('AVG(collecte.prix) as prix_moyen')
                 ->addSelect('unit.nom as unites')
                 ->addSelect('emb.nom as emballage')
                 ->addSelect('condi.nom as conditionnement')
@@ -1408,5 +1507,11 @@ class CollecteRepository extends ServiceEntityRepository
 
             return $qb->getQuery()->getResult();
         }
+    }
+
+    public function findCollecteMonth()
+    {
+        $month = 2; // février
+        $year = 2023;
     }
 }

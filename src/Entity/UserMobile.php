@@ -20,7 +20,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 #[ApiResource(
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
-    
+
 )]
 class UserMobile
 {
@@ -34,9 +34,9 @@ class UserMobile
     #[Groups(["read", "write"])]
     private $roles = [];
 
-    #[ORM\Column(type: 'string', length: 255,unique:true)]  
+    #[ORM\Column(type: 'string', nullable: true, length: 255, unique: true)]
     #[Groups(["read", "write"])]
-    private $email;
+    private $email = null;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Groups(["read", "write"])]
@@ -46,7 +46,7 @@ class UserMobile
     #[Groups(["read", "write"])]
     private $nom;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[ORM\Column(type: 'string', length: 10, unique: true)]
     #[Groups(["read", "write"])]
     private $telephone;
 
@@ -71,7 +71,7 @@ class UserMobile
     #[Groups(["write"])]
     private $region;
 
-   
+
     #[ORM\ManyToOne(targetEntity: Departement::class)]
     #[Groups(["read", "write"])]
     private $departement;
@@ -79,7 +79,7 @@ class UserMobile
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Vente::class)]
     // #[Groups(["read", "write"])]
     private $ventes;
-   
+
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Collecte::class)]
     #[Groups(["read", "write"])]
     private $collectes;
@@ -101,7 +101,7 @@ class UserMobile
     private $unites;
 
 
-    #[ORM\Column(type: 'boolean' )]
+    #[ORM\Column(type: 'boolean')]
     #[Groups(["read", "write"])]
     private $hasLaiteries;
 
@@ -123,7 +123,7 @@ class UserMobile
 
         $this->ventes = new ArrayCollection();
         $this->collectes = new ArrayCollection();
-//        $this->unites = new ArrayCollection();
+        //        $this->unites = new ArrayCollection();
     }
 
 
@@ -138,7 +138,7 @@ class UserMobile
         return $this->email;
     }
 
-    public function setEmail(string $email): self
+    public function setEmail(?string $email): self
     {
         $this->email = $email;
 
@@ -353,16 +353,16 @@ class UserMobile
             'region' => $this->region->asArray(),
             'departement' => $this->departement->asArray(),
             'status' => $this->status->asArray(),
-            'uuid'=>$this->uuid,
+            'uuid' => $this->uuid,
             'password' => $this->password,
-            'hasLaiteries'=> $this->hasLaiteries,
-            'localite'=> $this->localite,
+            'hasLaiteries' => $this->hasLaiteries,
+            'localite' => $this->localite,
             'profil' => $this->profil->asArray()
         ];
     }
 
 
- 
+
 
     public function getHasLaiteries(): ?bool
     {
@@ -522,6 +522,4 @@ class UserMobile
 
         return $this;
     }
-
-
 }

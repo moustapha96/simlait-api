@@ -37,7 +37,6 @@ class MyUserMobileController extends AbstractController
             foreach ($laiteries as $m) {
                 $resultats[] = $m->asArray();
             }
-
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
             return new JsonResponse(['err' => $e->getMessage()], 500);
@@ -48,15 +47,20 @@ class MyUserMobileController extends AbstractController
      * @Route("/api/user_mobiles/create", name="app_user_mobile_create",methods={"POST"})
      * @param Request $request
      */
-    public function createUserMobile(Request $request,StatusRepository $str ,RegionRepository $rr, ProfilsRepository $pr, DepartementRepository $dr, EntityManagerInterface $em): ?Response
+    public function createUserMobile(Request $request, UserMobileRepository $userMobileRepository, StatusRepository $str, RegionRepository $rr, ProfilsRepository $pr, DepartementRepository $dr, EntityManagerInterface $em): ?Response
     {
         try {
             $data = json_decode($request->getContent(), true);
-            $email = $data['email'];
+            $email = $data['email'] || null;
             $prenom = $data['prenom'];
             $nom = $data['nom'];
             $adresse = $data['adresse'];
             $telephone = $data['telephone'];
+            $userExit = $userMobileRepository->findOneBy(['telephone' => $telephone]);
+            if ($userExit) {
+                return new Response("Numéro de téléphone existe déjà", 400);
+            }
+
             $sexe = $data['sexe'];
             $roles = $data['roles'];
             $enabled = $data['enabled'];
@@ -94,9 +98,9 @@ class MyUserMobileController extends AbstractController
             $em->persist($user);
             $em->flush();
 
-            return new Response("user bien creer");
+            return new Response("user bien creer", 201);
         } catch (\Exception $e) {
-            return new Response("Laiterie non creer $e ");
+            return new Response("utilisateur non creer $e ", 400);
         }
     }
 
@@ -104,16 +108,21 @@ class MyUserMobileController extends AbstractController
      * @Route("/api/user_mobiles/update", name="app_user_mobile_update",methods={"POST"})
      * @param Request $request
      */
-    public function updateUserMobile(Request $request, StatusRepository $str ,ProfilsRepository $pr,UserMobileRepository $ru, RegionRepository $rr, DepartementRepository $dr, EntityManagerInterface $em): ?Response
+    public function updateUserMobile(Request $request, UserMobileRepository $userMobileRepository, StatusRepository $str, ProfilsRepository $pr, UserMobileRepository $ru, RegionRepository $rr, DepartementRepository $dr, EntityManagerInterface $em): ?Response
     {
         try {
             $data = json_decode($request->getContent(), true);
             $id = $data['id'];
-            $email = $data['email'];
+            $email = $data['email'] || null;
             $prenom = $data['prenom'];
             $nom = $data['nom'];
             $adresse = $data['adresse'];
             $telephone = $data['telephone'];
+            $userExit = $userMobileRepository->findOneBy(['telephone' => $telephone]);
+            if ($userExit) {
+                return new Response("Numéro de téléphone existe déjà", 400);
+            }
+
             $sexe = $data['sexe'];
             $roles = $data['roles'];
             $enabled = $data['enabled'];
@@ -130,7 +139,7 @@ class MyUserMobileController extends AbstractController
             $status = $str->find($idStatus);
             $profil = $pr->find($idprofil);
 
-           
+
             $user = $ru->find($id);
             $user->setEmail($email);
             $user->setLocalite($localite);
@@ -148,13 +157,13 @@ class MyUserMobileController extends AbstractController
             $user->setPassword($password);
             $user->setHasLaiteries($hasLaiteries);
             $user->setProfil($profil);
-           
+
             $em->persist($user);
             $em->flush();
 
-            return new Response("user bien mise a jour");
+            return new Response("user bien mise a jour", 200);
         } catch (\Exception $e) {
-            return new Response("user non mise a jour $e ");
+            return new Response("utilisateur non mise à jour $e ", 400);
         }
     }
 }

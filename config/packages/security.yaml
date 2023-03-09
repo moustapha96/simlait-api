@@ -13,6 +13,18 @@ security:
       entity:
         class: App\Entity\User
         property: email
+    chain_provider:
+      chain:
+        providers: [phone_provider, email_provider]
+
+    phone_provider:
+      entity:
+        class: App\Entity\User
+        property: phone
+    email_provider:
+      entity:
+        class: App\Entity\User
+        property: email
 
   firewalls:
     dev:
@@ -21,15 +33,16 @@ security:
     api:
       pattern: ^/api/
       stateless: true
-      provider: app_user_provider
+      provider: chain_provider
       jwt: ~
 
     main:
       lazy: true
+      provider: chain_provider
       json_login:
         check_path: /authentication_token
-        username_path: email
-        password_path: password
+        # username_path: phoneOrEmail
+        # password_path: password
         success_handler: lexik_jwt_authentication.handler.authentication_success
         failure_handler: lexik_jwt_authentication.handler.authentication_failure
       # logout:

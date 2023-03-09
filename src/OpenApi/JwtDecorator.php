@@ -8,12 +8,14 @@ namespace App\OpenApi;
 use ApiPlatform\Core\OpenApi\Factory\OpenApiFactoryInterface;
 use ApiPlatform\Core\OpenApi\OpenApi;
 use ApiPlatform\Core\OpenApi\Model;
+use ApiPlatform\OpenApi\Factory\OpenApiFactoryInterface as FactoryOpenApiFactoryInterface;
 
-final class JwtDecorator implements OpenApiFactoryInterface
+final class JwtDecorator implements FactoryOpenApiFactoryInterface
 {
     public function __construct(
-        private OpenApiFactoryInterface $decorated
-    ) {}
+        private FactoryOpenApiFactoryInterface $decorated
+    ) {
+    }
 
     public function __invoke(array $context = []): OpenApi
     {
@@ -32,6 +34,10 @@ final class JwtDecorator implements OpenApiFactoryInterface
         $schemas['Credentials'] = new \ArrayObject([
             'type' => 'object',
             'properties' => [
+                'phone' => [
+                    'type' => 'string',
+                    'example' => '0123456789',
+                ],
                 'email' => [
                     'type' => 'string',
                     'example' => 'johndoe@example.com',
@@ -41,6 +47,7 @@ final class JwtDecorator implements OpenApiFactoryInterface
                     'example' => 'apassword',
                 ],
             ],
+            'required' => ['password'],
         ]);
 
         $pathItem = new Model\PathItem(
@@ -73,6 +80,7 @@ final class JwtDecorator implements OpenApiFactoryInterface
                 ),
             ),
         );
+
         $openApi->getPaths()->addPath('/authentication_token', $pathItem);
 
         return $openApi;

@@ -16,7 +16,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+
 #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
+#[UniqueEntity(fields: ['phone'], message: 'There is already an account with this phone')]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[
     ApiResource(
@@ -33,8 +35,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["read", "write"])]
     private $id;
 
-    #[ORM\Column(type: 'string', length: 255, unique: true)]
-    #[Assert\NotBlank()]
+    #[ORM\Column(type: 'string', nullable: true, length: 255, unique: true)]
     #[Groups(["read", "write"])]
     private $email;
 
@@ -46,9 +47,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["read", "write"])]
     private $password;
 
-    //    #[Assert\NotBlank()]
-    //    #[Groups(["read", "write"])]
-    //    private $plainPassword;
+    #[Assert\NotBlank(groups: ['POST'])]
+    #[Groups(["read", "write"])]
+    private $plainPassword;
 
     #[Assert\NotBlank()]
     #[ORM\Column(type: 'string', length: 255)]
@@ -64,7 +65,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["read", "write"])]
     private $enabled;
 
-    #[ORM\Column(type: 'string', length: 255)]
+    #[Assert\NotBlank(groups: ['POST'])]
+    #[ORM\Column(type: 'string', length: 10, unique: true)]
     #[Groups(["read", "write"])]
     private $phone;
 
@@ -89,7 +91,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $sexe;
 
 
-
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     // #[Groups(["read", "write"])]
     private $reset_token;
@@ -102,13 +103,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["read", "write"])]
     private Collection $received;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(["read", "write"])]
     private ?string $avatar = null;
 
     #[ORM\Column(length: 255, nullable: true)]
     #[Groups(["read", "write"])]
     private ?string $pass = null;
+
+
 
     public function __construct()
     {
@@ -140,10 +143,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->email;
     }
 
-    public function setEmail(string $email): self
+    public function setEmail(?string $email): self
     {
         $this->email = $email;
-
         return $this;
     }
 
@@ -221,6 +223,29 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+    private function sanitizePhoneNumber(string $phoneNumber)
+    {
+        return str_replace('+', '', $phoneNumber);
+    }
+
+    // public function setPhone(string $phone): self
+    // {
+    //     // $sanitizedPhoneNumber = $this->sanitizePhoneNumber($phone);
+    //     $this->validatePhoneNumber($phone);
+    //     $this->phone = $phone;
+
+    //     return $this;
+    // }
+
+    private function validatePhoneNumber(string $phoneNumber)
+    {
+        if (!preg_match('/^(76|77|78)\[1-9][0-9]{7}$/', $phoneNumber)) {
+            throw new \InvalidArgumentException(
+                'Please provide phone number in E164 format without the \'+\' symbol'
+            );
+        }
+    }
+
 
     public function getStatus(): ?string
     {
@@ -264,21 +289,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials()
     {
         // If you store any temporary, sensitive data on the user, clear it here
-        //        $this->plainPassword = null;
+        // $this->plainPassword = null;
     }
 
 
-    //    public function getPlainPassword(): ?string
-    //    {
-    //        return $this->plainPassword;
-    //    }
-    //
-    //    public function setPlainPassword(string $plainPassword): self
-    //    {
-    //        $this->plainPassword = $plainPassword;
-    //
-    //        return $this;
-    //    }
+    public function getPlainPassword(): ?string
+    {
+        return $this->plainPassword;
+    }
+
+    public function setPlainPassword(string $plainPassword): self
+    {
+        $this->plainPassword = $plainPassword;
+
+        return $this;
+    }
+
+
 
     public function getLastActivityAt(): ?\DateTimeInterface
     {

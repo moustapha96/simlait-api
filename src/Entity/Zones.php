@@ -15,7 +15,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ApiResource(
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
-    
+
 )]
 class Zones
 {
@@ -48,10 +48,10 @@ class Zones
     public function __construct()
     {
         $this->departements = new ArrayCollection();
-        $this->laiteries = new ArrayCollection();
+        // $this->laiteries = new ArrayCollection();
     }
 
-    
+
     public function getId(): ?int
     {
         return $this->id;
@@ -157,13 +157,14 @@ class Zones
     {
         return (string) $this->departements;
     }
-    public function asArray(): ?array{
+    public function asArray(): ?array
+    {
 
         $resultatsD = array();
         foreach ($this->departements as $d) {
             $resultatsD[] = $d->asArray();
         }
-       
+
         return [
             "id" => $this->id,
             "nom" => $this->nom,
@@ -173,9 +174,10 @@ class Zones
             // "laiteries" => $this->laiteries,
         ];
     }
-    public function asArraygetDepartement(): ?array{
+    public function asArraygetDepartement(): ?array
+    {
 
-       
+
         return [
             "id" => $this->id,
             "nom" => $this->nom,
@@ -183,9 +185,10 @@ class Zones
             "statut" => $this->statut,
         ];
     }
-    public function asArraygetWithOutDepartement(): ?array{
+    public function asArraygetWithOutDepartement(): ?array
+    {
 
-       
+
         return [
             "id" => $this->id,
             "nom" => $this->nom,

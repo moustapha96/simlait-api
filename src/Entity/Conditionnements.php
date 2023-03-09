@@ -122,11 +122,11 @@ class Conditionnements
     {
         return (string) $this->produits;
     }
-   
+
     public function asArray(): array
     {
         return [
-            'id'=> $this->getId(),
+            'id' => $this->getId(),
             'nom' => $this->nom,
             'description' => $this->description,
             'statut' => $this->statut,

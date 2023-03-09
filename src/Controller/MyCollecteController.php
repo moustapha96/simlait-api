@@ -10,6 +10,7 @@ use App\Repository\ProduitsRepository;
 use App\Repository\UnitesRepository;
 use App\Repository\UserMobileRepository;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Expr\Value;
 use Doctrine\DBAL\Schema\View;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityNotFoundException;
@@ -27,6 +28,38 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 class MyCollecteController extends AbstractController
 {
 
+
+    /**
+     * @Route("/api/collectes/searchAll", name="app_search_collecte_all",methods={"POST"})
+     * @param Request $request
+     * @return View
+     */
+    public function searchAll(Request $request, CollecteRepository $repo): ?Response
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+            $region = $data['region'];
+            $department = $data['departement'];
+            $produit = $data['produit'];
+            $conditionnement = $data['conditionnement'];
+            $unites = $data['unites'];
+            $emballage = $data['emballage'];
+            $dateDebut = $data['dateDebut'];
+            $dateFin = $data['dateFin'];
+            $zone = $data['zone'];
+            $profil = $data['profil'];
+
+            $collectes = $repo->findAllByCriteria($region, $department, $zone, $produit, $conditionnement, $unites, $emballage, $dateDebut, $dateFin);
+            $resultats = array();
+            foreach ($collectes as $m) {
+                $resultats[] = $m->asArray();
+            }
+
+            return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['err' => $e->getMessage()], 500);
+        }
+    }
 
     /**
      * @Route("/api/collectes/search", name="app_search_collecte",methods={"POST"})
@@ -151,12 +184,17 @@ class MyCollecteController extends AbstractController
         UnitesRepository $lr,
         UserMobileRepository $ur,
         EmballageRepository $er,
-        EntityManagerInterface $em
+        EntityManagerInterface $em,
+        CollecteRepository $collecteRepository
     ): Response {
 
         try {
 
             $data = json_decode($request->getContent(), true);
+
+            $uuid = $data['uuid'];
+            $collecte = $collecteRepository->findOneBy(['uuid' => $uuid]);
+
             $idProduit =  $data['idProduit'];
             $idConditionnement = $data['idConditionnement'];
             $idUnites = $data['idUnites'];
@@ -185,36 +223,50 @@ class MyCollecteController extends AbstractController
             $dateCollecte = $data['dateCollecte'];
             $date = new \DateTime($dateCollecte);
             $datei = \DateTimeImmutable::createFromMutable($date);
+            $toCorrect = $data['toCorrect'];
 
+            if ($collecte) {
 
-            $collecte = new Collecte();
-            $collecte->setConditionnements($conditionnement);
-            $collecte->setEmballages($emballage);
-            $collecte->setUser($user);
-            $collecte->setUnites($unite);
-            $collecte->setProduits($produit);
-            $collecte->setQuantite($quantite);
-            $collecte->setPrix($prix);
-            $collecte->setIsCertified($isCertified);
-            $collecte->setIsDeleted($isDeleted);
-            $collecte->setDateCollecte($datei);
-            $collecte->setIsSynchrone($isSynchrone);
-            $collecte->setDateSaisie($dateSaisie);
-            // if($unite->getProfil()->getNom() == "COLLECTEUR" ){
-            //     $collecte->setQuantiteVendu(0);
-            // }else {
-            //     $collecte->setQuantitePerdu($quantite_perdu);
-            //     $collecte->setQuantiteAutre($quantite_autre);
-            //     $collecte->setQuantiteVendu($quantite_vendu);
-            // }
+                $collecte->setConditionnements($conditionnement);
+                $collecte->setEmballages($emballage);
+                $collecte->setUser($user);
+                $collecte->setUnites($unite);
+                $collecte->setProduits($produit);
+                $collecte->setQuantite($quantite);
+                $collecte->setPrix($prix);
+                $collecte->setIsCertified($isCertified);
+                $collecte->setIsDeleted($isDeleted);
+                $collecte->setDateCollecte($datei);
+                $collecte->setIsSynchrone($isSynchrone);
+                $collecte->setDateSaisie($dateSaisie);
+                $collecte->setQuantitePerdu($quantite_perdu);
+                $collecte->setQuantiteAutre($quantite_autre);
+                $collecte->setQuantiteVendu($quantite_vendu);
+                $collecte->setToCorrect($toCorrect);
 
-            $collecte->setQuantitePerdu($quantite_perdu);
-            $collecte->setQuantiteAutre($quantite_autre);
-            $collecte->setQuantiteVendu($quantite_vendu);
-
-            $em->persist($collecte);
-            $em->flush();
-
+                $em->persist($collecte);
+                $em->flush();
+            } else {
+                $collecte = new Collecte();
+                $collecte->setConditionnements($conditionnement);
+                $collecte->setEmballages($emballage);
+                $collecte->setUser($user);
+                $collecte->setUnites($unite);
+                $collecte->setProduits($produit);
+                $collecte->setQuantite($quantite);
+                $collecte->setPrix($prix);
+                $collecte->setIsCertified($isCertified);
+                $collecte->setIsDeleted($isDeleted);
+                $collecte->setToCorrect($toCorrect);
+                $collecte->setDateCollecte($datei);
+                $collecte->setIsSynchrone($isSynchrone);
+                $collecte->setDateSaisie($dateSaisie);
+                $collecte->setQuantitePerdu($quantite_perdu);
+                $collecte->setQuantiteAutre($quantite_autre);
+                $collecte->setQuantiteVendu($quantite_vendu);
+                $em->persist($collecte);
+                $em->flush();
+            }
             return new JsonResponse([$collecte->asArray()], 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
 
@@ -300,6 +352,65 @@ class MyCollecteController extends AbstractController
             foreach ($collectes as $m) {
                 $resultats[] = $m->asArray();
             }
+            return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
+        } catch (\Exception $e) {
+            return new JsonResponse([$e->getMessage()], 500, ["Content-Type" => "application/json"]);
+        }
+    }
+
+
+    // fonction retournant le pourcentage de chaque agent de ces collecte certifier et non certifier 
+    /**
+     * @Route("/api/collectes/percent/{id}", name="app_collecte_percent" , methods={"GET"})
+     */
+    public function getPercentCollecteAgent(int $id, CollecteRepository $collecteRepository, UserMobileRepository $userMobileRepository): ?Response
+    {
+        try {
+
+            $user = $userMobileRepository->find($id);
+            $criteter = ['user' => $user, 'isCertified' => true];
+            $criteter_no = ['user' => $user, 'isCertified' => false];
+
+            if (!$user) {
+                return new JsonResponse("user not found", 200, ["Content-Type" => "application/json"]);
+            }
+
+            $collectes_certifier  = $collecteRepository->findBy($criteter);
+            $collectes_no_certifier  = $collecteRepository->findBy($criteter_no);
+            $collectes = $collecteRepository->findBy(['user' => $user]);
+
+
+
+            if (!$collectes) {
+                return new JsonResponse(['Certified' => 0, "noCertified" => 0], 200, ["Content-Type" => "application/json"]);
+            }
+
+
+
+
+            $percent = (count($collectes_certifier) * 100) / count($collectes);
+            $no_certifier = 100 - $percent;
+
+            return new JsonResponse(['Certified' => number_format($percent, 1, ',', ' '), "noCertified" => number_format($no_certifier, 1, ',', ' ')], 200, ["Content-Type" => "application/json"]);
+        } catch (\Exception $e) {
+            return new JsonResponse([$e->getMessage()], 500, ["Content-Type" => "application/json"]);
+        }
+    }
+    /**
+     * @Route("/api/collectes/user/{id}", name="app_collecte_user" , methods={"GET"})
+     */
+    public function getCollecteUser(int $id, CollecteRepository $collecteRepository, UserMobileRepository $userMobileRepository): ?Response
+    {
+        try {
+
+            $user = $userMobileRepository->find($id);
+            $criteter = ['user' => $user];
+            $collectes = $collecteRepository->findBy($criteter);
+            $resultats = [];
+            foreach ($collectes as $key => $value) {
+                $resultats[] = $value->asArray();
+            }
+
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
             return new JsonResponse([$e->getMessage()], 500, ["Content-Type" => "application/json"]);

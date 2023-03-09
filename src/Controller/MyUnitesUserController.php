@@ -29,7 +29,7 @@ class MyUnitesUserController extends AbstractController
 {
     // create unities users
     /**
-      * @Route("/api/unites_users/create", name="app_unites_user_create" ,methods={"POST"})
+     * @Route("/api/unites_users/create", name="app_unites_user_create" ,methods={"POST"})
      */
     public function Associated_unites_user(Request $request, UnitesUserRepository $repo, UnitesRepository $uniteRe): ?Response
     {
@@ -41,16 +41,16 @@ class MyUnitesUserController extends AbstractController
         $zone = $data['zone'];
         $profil = $data['profil'];
         try {
-            $unites = $uniteRe->findAssociated($region, $departement, $zone, $prenom, $nom,$profil);
+            $unites = $uniteRe->findAssociated($region, $departement, $zone, $prenom, $nom, $profil);
             $resultats = array();
             foreach ($unites as $m) {
                 if ($repo->isAssociated($m->getUserMobile()->getId(), $m->getId())  == null) {
                     $resultats[] = $m->asArray();
                 }
             }
-//            if (!$laiteries) {
-//                throw new EntityNotFoundException("aucun resultat trouvé");
-//            }
+            //            if (!$laiteries) {
+            //                throw new EntityNotFoundException("aucun resultat trouvé");
+            //            }
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
             return new JsonResponse(["aucun resultat"], 200, ["Content-Type" => "application/json"]);
@@ -63,7 +63,7 @@ class MyUnitesUserController extends AbstractController
     /**
      * @Route("/api/unites_users/search", name="app_unites_user_search" ,methods={"POST"})
      */
-    public function search_unites_user(Request $request, UnitesUserRepository $repo,UnitesRepository $uniteRe): ?Response
+    public function search_unites_user(Request $request, UnitesUserRepository $repo, UnitesRepository $uniteRe): ?Response
     {
         $data = json_decode($request->getContent(), true);
         $prenom = $data['prenom'];
@@ -74,12 +74,8 @@ class MyUnitesUserController extends AbstractController
         $profil = $data['profil'];
         $idUserMobile = $data['idUserMobile'];
 
-
-
         try {
-
-                $unites = $uniteRe->findAssociated($region, $departement, $zone,$profil,$idUserMobile);
-
+            $unites = $uniteRe->findAssociated($region, $departement, $zone, $profil, $idUserMobile);
 
             $resultats = array();
             foreach ($unites as $m) {
@@ -90,7 +86,7 @@ class MyUnitesUserController extends AbstractController
 
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(["erreur ". $e->getMessage()], 200, ["Content-Type" => "application/json"]);
+            return new JsonResponse(["erreur " . $e->getMessage()], 200, ["Content-Type" => "application/json"]);
         }
     }
 
@@ -140,7 +136,7 @@ class MyUnitesUserController extends AbstractController
     /**
      * @Route("/api/unites_users/create", name="app_unites_user_create" ,methods={"POST"})
      */
-    public function create_unites_user2(EntityManagerInterface $entityManager,Request $request, UnitesUserRepository $repoUniteUser,UserMobileRepository $userMobileRepository ,UnitesRepository $uniteRe): ?Response
+    public function create_unites_user2(EntityManagerInterface $entityManager, Request $request, UnitesUserRepository $repoUniteUser, UserMobileRepository $userMobileRepository, UnitesRepository $uniteRe): ?Response
     {
         $data = json_decode($request->getContent(), true);
         $idUserMobile = $data['idUserMobile'];
@@ -160,5 +156,4 @@ class MyUnitesUserController extends AbstractController
             return new JsonResponse(["relation non etablie " . $e->getMessage()], 500, ["Content-Type" => "application/json"]);
         }
     }
-
 }

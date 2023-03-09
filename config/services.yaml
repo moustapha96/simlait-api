@@ -38,6 +38,13 @@ services:
     tags:
       - { name: kernel.event_subscriber, event: unite.created }
 
+  App\EventListener\AuthenticationSuccessListener:
+    tags:
+      - {
+          name: kernel.event_listener,
+          event: lexik_jwt_authentication.on_authentication_success,
+          method: onAuthenticationSuccessResponse,
+        }
   # add more service definitions when explicit configuration is needed
   # please note that last definitions always *replace* previous ones
   # swagger docs
@@ -64,3 +71,10 @@ services:
     # Uncomment only if autoconfiguration is disabled
     #arguments: ['@App\DataPersister\UserDataPersister.inner']
     #tags: [ 'api_platform.data_persister' ]
+
+  App\service\StartupTask:
+    public: true
+    # tags:
+    #   - { name: kernel.event_listener, event: kernel.request, method: run }
+    tags:
+      - { name: kernel.event_subscriber }

@@ -10,7 +10,9 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
-
+use Symfony\Component\Uid\NilUuid;
+use Symfony\Component\Uid\Uuid;
+use Symfony\Component\Validator\Constraints\Uuid as ConstraintsUuid;
 
 #[ORM\Entity(repositoryClass: CollecteRepository::class)]
 #[ApiResource(
@@ -72,7 +74,7 @@ class Collecte
 
     #[ORM\Column(type: 'boolean', nullable: true)]
     #[Groups(["read", "write"])]
-    private $isDeleted;
+    private $isDeleted = null;
 
 
 
@@ -91,6 +93,14 @@ class Collecte
     #[ORM\Column(nullable: true)]
     #[Groups(["read", "write"])]
     private ?int $quantite_perdu = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(["read", "write"])]
+    private ?bool $toCorrect = false;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["read", "write"])]
+    private ?string $uuid = null;
 
 
     public function getId(): ?int
@@ -171,6 +181,10 @@ class Collecte
     public function setIsCertified(?bool $isCertified): self
     {
         $this->isCertified = $isCertified;
+        if ($this->isCertified) {
+            $this->toCorrect = false;
+            $this->isDeleted = false;
+        }
 
         return $this;
     }
@@ -207,10 +221,10 @@ class Collecte
     public function setIsDeleted(?bool $isDeleted): self
     {
         $this->isDeleted = $isDeleted;
-        // if ($this->isDeleted == true) {
-        //     $this->isSynchrone = false;
-        //     $this->isCertified = false;
-        // }
+        if ($this->isDeleted) {
+            $this->isCertified = false;
+            $this->toCorrect = false;
+        }
 
         return $this;
     }
@@ -218,6 +232,16 @@ class Collecte
 
     public function asArray(): array
     {
+        if ($this->dateCollecte instanceof DateTime) {
+            $dateCollecte = $this->dateCollecte->format('d/m/Y');
+        } else {
+            $dateCollecte = $this->dateCollecte;
+        }
+        if ($this->dateSaisie instanceof DateTime) {
+            $dateSaisie = $this->dateSaisie->format('d/m/Y');
+        } else {
+            $dateSaisie = $this->dateSaisie;
+        }
         return [
             'id' => $this->getId(),
             'produits' => $this->produits->asArray(),
@@ -225,7 +249,7 @@ class Collecte
             'unites' => $this->unites->asArray(),
             'user' => $this->user->asArray(),
             'emballages' => $this->emballages->asArray(),
-            'dateCollecte' => $this->dateCollecte,
+            'dateCollecte' => $dateCollecte,
             'isSynchrone' => $this->isSynchrone,
             'isCertified' => $this->isCertified,
             'quantite' => $this->quantite,
@@ -234,11 +258,23 @@ class Collecte
             'quantite_vendu' => $this->quantite_vendu,
             'quantite_autre' => $this->quantite_autre,
             'quantite_perdu' => $this->quantite_perdu,
-            'dateSaisie' => $this->dateSaisie
+            'dateSaisie' => $dateSaisie,
+            'toCorrect' => $this->toCorrect,
+            'uuid' => $this->uuid
         ];
     }
     public function asArray2(): array
     {
+        if ($this->dateCollecte instanceof DateTime) {
+            $dateCollecte = $this->dateCollecte->format('d/m/Y');
+        } else {
+            $dateCollecte = $this->dateCollecte;
+        }
+        if ($this->dateSaisie instanceof DateTime) {
+            $dateSaisie = $this->dateSaisie->format('d/m/Y');
+        } else {
+            $dateSaisie = $this->dateSaisie;
+        }
         return [
             'id' => $this->getId(),
             'produits' => $this->produits->asArray(),
@@ -246,7 +282,7 @@ class Collecte
             'unites' => $this->unites->asArray(),
             'user' => $this->user,
             'emballages' => $this->emballages->asArray(),
-            'dateCollecte' => $this->dateCollecte,
+            'dateCollecte' => $dateCollecte,
             'isSynchrone' => $this->isSynchrone,
             'isCertified' => $this->isCertified,
             'quantite' => $this->quantite,
@@ -255,7 +291,8 @@ class Collecte
             'quantite_vendu' => $this->quantite_vendu,
             'quantite_autre' => $this->quantite_autre,
             'quantite_perdu' => $this->quantite_perdu,
-            'dateSaisie' => $this->dateSaisie
+            'dateSaisie' => $dateSaisie,
+            'toCorrect' => $this->toCorrect
         ];
     }
 
@@ -345,6 +382,35 @@ class Collecte
         } else {
             $this->dateCollecte = $dateCollecte;
         }
+        return $this;
+    }
+
+    public function isToCorrect(): ?bool
+    {
+        return $this->toCorrect;
+    }
+
+    public function setToCorrect(?bool $toCorrect): self
+    {
+        $this->toCorrect = $toCorrect;
+        if ($toCorrect) {
+            $this->isCertified = false;
+            $this->isDeleted = false;
+            // $this->isSynchrone = false;
+        }
+        return $this;
+    }
+
+    public function getUuid(): ?string
+    {
+        return $this->uuid;
+    }
+
+    public function setUuid(?string $uuid): self
+    {
+        $uuide = ConstraintsUuid::V4_RANDOM;
+        $this->uuid = $uuide;
+
         return $this;
     }
 }

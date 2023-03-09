@@ -15,7 +15,7 @@ final class UserDataPersister implements ContextAwareDataPersisterInterface
     private $decorated;
     private $userPasswordHasher;
     private $tokenStorage;
-
+    private $entityManager;
     public function __construct(
         \Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface  $tokenStorage,
         ContextAwareDataPersisterInterface $decorated,
