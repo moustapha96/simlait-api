@@ -9,21 +9,14 @@ use App\Repository\EmballageRepository;
 use App\Repository\ProduitsRepository;
 use App\Repository\UnitesRepository;
 use App\Repository\UserMobileRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Expr\Value;
 use Doctrine\DBAL\Schema\View;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\EntityNotFoundException;
-use EasyRdf\Serialiser\Json;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
-use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class MyCollecteController extends AbstractController
 {
@@ -54,7 +47,6 @@ class MyCollecteController extends AbstractController
             foreach ($collectes as $m) {
                 $resultats[] = $m->asArray();
             }
-
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
             return new JsonResponse(['err' => $e->getMessage()], 500);

@@ -11,6 +11,10 @@
     ],
     "routes": [
         {
+            "src": "/(.*/.php)",
+            "dest": "/public/$1"
+        },
+        {
             "src": "/(.*)",
             "dest": "/public/index.php"
         }
