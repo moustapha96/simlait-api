@@ -1,0 +1,27 @@
+{
+    "version": 2,
+    "builds": [
+        {
+            "src": "public/index.php",
+            "use": "@vercel/php",
+            "config": {
+                "maxLambdaSize": "1024"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/(.*)",
+            "dest": "/public/index.php"
+        }
+    ],
+    "env": {
+        "APP_ENV": "prod",
+        "DATABASE_URL": "@mysql://user:password@host:port/dbname"
+    },
+    "functions": {
+        "api/**/*": {
+            "runtime": "@vercel/php"
+        }
+    }
+}
