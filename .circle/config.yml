@@ -6,10 +6,10 @@ jobs:
       - image: circleci/php:7.4-node-browsers
         environment:
           MYSQL_HOST: 127.0.0.1
-          MYSQL_DB: symfony
+          MYSQL_DB: laiterie_db
           MYSQL_USER: root
           MYSQL_ALLOW_EMPTY_PASSWORD: true
-          MYSQL_PASSWORD:
+          MYSQL_PASSWORD: root
       - image: mysql:5.7
         command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --innodb-large-prefix=true --innodb-file-format=Barracuda
         environment:
