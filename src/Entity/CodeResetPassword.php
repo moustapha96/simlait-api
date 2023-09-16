@@ -14,6 +14,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
 )]
+
+#[ORM\Table(name: '`simlait_code_reset_password`')]
 class CodeResetPassword
 {
     #[ORM\Id]
@@ -102,8 +104,8 @@ class CodeResetPassword
 
     public function setEnable(bool $enable): self
     {
-       
-        if( $this->dateCreateAt >= $this->dateExpirate ){
+
+        if ($this->dateCreateAt >= $this->dateExpirate) {
             $this->enable = false;
         }
         $this->enable = $enable;

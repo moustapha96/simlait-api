@@ -8,11 +8,13 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: StatusRepository::class)]
-#[ApiResource (
+#[ApiResource(
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
-    
+
 )]
+
+#[ORM\Table(name: '`simlait_statuts`')]
 class Status
 {
     #[ORM\Id]
@@ -24,6 +26,12 @@ class Status
     #[ORM\Column(length: 255)]
     #[Groups(["read", "write"])]
     private ?string $nom = null;
+
+
+    public function __toString()
+    {
+        return sprintf('Status #%d', $this->getId());
+    }
 
     public function getId(): ?int
     {
@@ -41,10 +49,11 @@ class Status
 
         return $this;
     }
-    public function asArray(): array{
+    public function asArray(): array
+    {
         return [
-            'id'=> $this->id,
-            'nom'=> $this->nom
+            'id' => $this->id,
+            'nom' => $this->nom
         ];
     }
 }

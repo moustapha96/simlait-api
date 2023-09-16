@@ -15,8 +15,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ApiResource(
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
-
 )]
+#[ORM\Table(name: '`simlait_zones`')]
 class Zones
 {
     #[ORM\Id]
@@ -41,16 +41,10 @@ class Zones
     #[Groups(["write"])]
     public $departements;
 
-    // #[ORM\OneToMany(mappedBy: 'zones', targetEntity: Laiterie::class)]
-    // #[Groups(["read", "write"])]
-    // private $laiteries;
-
     public function __construct()
     {
         $this->departements = new ArrayCollection();
-        // $this->laiteries = new ArrayCollection();
     }
-
 
     public function getId(): ?int
     {
@@ -123,35 +117,6 @@ class Zones
         return $this;
     }
 
-    // /**
-    //  * @return Collection|Laiterie[]
-    //  */
-    // public function getLaiteries(): Collection
-    // {
-    //     return $this->laiteries;
-    // }
-
-    // public function addLaitery(Laiterie $laitery): self
-    // {
-    //     if (!$this->laiteries->contains($laitery)) {
-    //         $this->laiteries[] = $laitery;
-    //         $laitery->setZones($this);
-    //     }
-
-    //     return $this;
-    // }
-
-    // public function removeLaitery(Laiterie $laitery): self
-    // {
-    //     if ($this->laiteries->removeElement($laitery)) {
-    //         // set the owning side to null (unless already changed)
-    //         if ($laitery->getZones() === $this) {
-    //             $laitery->setZones(null);
-    //         }
-    //     }
-
-    //     return $this;
-    // }
 
     public function __toString()
     {
@@ -176,8 +141,6 @@ class Zones
     }
     public function asArraygetDepartement(): ?array
     {
-
-
         return [
             "id" => $this->id,
             "nom" => $this->nom,
@@ -187,8 +150,6 @@ class Zones
     }
     public function asArraygetWithOutDepartement(): ?array
     {
-
-
         return [
             "id" => $this->id,
             "nom" => $this->nom,

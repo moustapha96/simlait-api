@@ -6,6 +6,8 @@ use App\Repository\UnitesUserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+
+#[ORM\Table(name: '`simlait_unite_users`')]
 #[ORM\Entity(repositoryClass: UnitesUserRepository::class)]
 class UnitesUser
 {
@@ -44,7 +46,7 @@ class UnitesUser
 
         return [
             'unites' => $this->unites->asArray(),
-            'userMobile'=> $this->userMobile->asArray()
+            'userMobile' => $this->userMobile->asArray()
 
         ];
     }
@@ -60,6 +62,4 @@ class UnitesUser
 
         return $this;
     }
-
-
 }

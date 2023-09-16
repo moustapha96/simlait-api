@@ -2,7 +2,9 @@
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Repository\UserRepository;
+use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -13,41 +15,46 @@ use Symfony\Component\Security\Core\Exception\UserNotFoundException;
 class LoginController
 {
 
+    // private $jwtManager;
 
-    public function __invoke(Request $request, UserRepository $userRepository)
-    {
-        // $data = json_decode($request->getContent(), true);
+    // public function __construct(JWTTokenManagerInterface $jwtManager)
+    // {
+    //     $this->jwtManager = $jwtManager;
+    // }
 
-        // $identifier = $data['phoneOrEmail'];
-        // $password = $data['password'];
+    // public function __invoke(Request $request)
+    // {
+    //     /** @var UserInterface $user */
+    //     $user = $this->getUser();
 
-        // // Determine if the user is logging in with an email or a phone number
-        // $isPhoneNumber = preg_match('/^[0-9]{9}$/', $identifier);
 
+    //     // $user = $tokenStorage->getToken()->getUser();
 
-        // if ($isPhoneNumber) {
-        //     $user = $userRepository->findOneBy(['phone' => $identifier]);
-        // } else {
-        //     $user = $userRepository->findOneBy(['email' => $identifier]);
-        // }
+    //     if (!$user instanceof User) {
+    //         throw new BadCredentialsException();
+    //     }
 
-        // if (!$user) {
-        //     throw new UserNotFoundException(sprintf('No user found for identifier "%s".', $identifier));
-        // }
+    //     $data = [
+    //         'id' => $user->getId(),
+    //         'username' => $user->getUsername(),
+    //         'email' => $user->getEmail(),
+    //         'roles' => $user->getRoles(),
+    //         'firstName' => $user->getFirstName(),
+    //         'lastName' => $user->getLastName(),
+    //         'phone' => $user->getPhone(),
+    //         'enabled' => $user->getEnabled(),
+    //         'isActiveNow' => $user->getIsActiveNow(),
+    //         'lastActivityAt' => $user->getLastActivityAt(),
+    //         'sexe' => $user->getSexe(),
+    //         'status' => $user->getStatus(),
+    //         'adresse' => $user->getAdresse(),
+    //         'sent' => $user->getSent(),
+    //         'received' => $user->getReceived(),
+    //         'avatar' => $user->getAvatar(),
+    //     ];
 
-        // // Check the user's password
-        // $isPasswordValid = $this->get('security.password_encoder')
-        //     ->isPasswordValid($user, $password);
+    //     $token = $this->jwtManager->create($user, $data);
 
-        // if (!$isPasswordValid) {
-        //     throw new BadCredentialsException('Invalid password');
-        // }
-
-        // // Generate a JWT token for the authenticated user
-        // $token = $this->jwtManager->create($user);
-
-        // return new JsonResponse([
-        //     'token' => $token,
-        // ]);
-    }
+    //     return ['token' => $token];
+    // }
 }

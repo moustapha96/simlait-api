@@ -5,22 +5,17 @@ namespace App\Entity;
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\CollecteRepository;
 use DateTime;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
-use Symfony\Component\Uid\NilUuid;
-use Symfony\Component\Uid\Uuid;
-use Symfony\Component\Validator\Constraints\Uuid as ConstraintsUuid;
 
 #[ORM\Entity(repositoryClass: CollecteRepository::class)]
 #[ApiResource(
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
-
+    order: ['id' => 'DESC'],
 )]
-
+#[ORM\Table(name: '`simlait_collectes`')]
 class Collecte
 {
     #[ORM\Id]
@@ -46,11 +41,9 @@ class Collecte
     #[Groups(["read", "write"])]
     private $user;
 
-
     #[ORM\ManyToOne(targetEntity: Emballage::class)]
     #[Groups(["read", "write"])]
     private $emballages;
-
 
     #[ORM\Column(type: 'datetime', nullable: true)]
     #[Groups(["read", "write"])]
@@ -408,8 +401,7 @@ class Collecte
 
     public function setUuid(?string $uuid): self
     {
-        $uuide = ConstraintsUuid::V4_RANDOM;
-        $this->uuid = $uuide;
+        $this->uuid = $uuid;
 
         return $this;
     }

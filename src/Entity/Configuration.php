@@ -6,6 +6,7 @@ use App\Repository\ConfigurationRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use ApiPlatform\Core\Annotation\ApiResource;
+use Doctrine\DBAL\Types\Types;
 
 #[ApiResource(
     normalizationContext: ['groups' => ['read']],
@@ -13,6 +14,7 @@ use ApiPlatform\Core\Annotation\ApiResource;
 
 )]
 
+#[ORM\Table(name: '`simlait_configurations`')]
 #[ORM\Entity(repositoryClass: ConfigurationRepository::class)]
 class Configuration
 {
@@ -22,13 +24,14 @@ class Configuration
     #[Groups(["read", "write"])]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     #[Groups(["read", "write"])]
     private $valeur;
 
     #[ORM\Column(length: 255)]
     #[Groups(["read", "write"])]
     private $cle;
+
 
     public function getId(): ?int
     {

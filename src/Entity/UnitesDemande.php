@@ -10,12 +10,14 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+
 #[ORM\Entity(repositoryClass: UnitesDemandeRepository::class)]
 #[ApiResource(
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
-
 )]
+
+#[ORM\Table(name: '`simlait_unite_demandes`')]
 class UnitesDemande
 {
     #[ORM\Id]

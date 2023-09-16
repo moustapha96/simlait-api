@@ -47,10 +47,17 @@ class UserMobileRepository extends ServiceEntityRepository
         ;
     }
     */
-   
 
+    public function findAllDesc()
+    {
+        return $this->createQueryBuilder('u')
+            ->orderBy('u.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 
-    public function findLaiterieUser(string $email){
+    public function findLaiterieUser(string $email)
+    {
         $qb = $this->createQueryBuilder('user');
 
         $qb->addSelect('lait')->join('user.unites', 'lait')

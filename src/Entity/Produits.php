@@ -9,15 +9,16 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
-use Doctrine\ORM\Mapping\JoinColumn;
-use Doctrine\ORM\Mapping\InverseJoinColumn;
-use Doctrine\ORM\Mapping\JoinTable;
+
 
 #[ORM\Entity(repositoryClass: ProduitsRepository::class)]
 #[ApiResource(
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
 )]
+
+
+#[ORM\Table(name: '`simlait_produits`')]
 class Produits
 {
     #[ORM\Id]
@@ -55,7 +56,7 @@ class Produits
     )]
     #[Groups(["read", "write"])]
     private $profils;
-    
+
 
 
     #[ORM\Column(length: 255)]
@@ -69,7 +70,6 @@ class Produits
     public function __construct()
     {
         $this->conditionnements = new ArrayCollection();
-        $this->demandes = new ArrayCollection();
         $this->profils = new ArrayCollection();
         $this->unitesDemande = new ArrayCollection();
     }
@@ -117,7 +117,7 @@ class Produits
         $this->statut = $statut;
         return $this;
     }
-     /**
+    /**
      * @return Collection|Conditionnements[]
      */
     public function getConditionnements(): Collection
@@ -183,7 +183,7 @@ class Produits
             'nom' => $this->nom,
             'description' => $this->description,
             'statut' => $this->statut,
-            'unite'=> $this->unite,
+            'unite' => $this->unite,
             'conditionnements' => $this->conditionnements,
         ];
     }
@@ -193,7 +193,7 @@ class Produits
             'id' => $this->getId(),
             'nom' => $this->nom,
             'description' => $this->description,
-            'unite'=> $this->unite,
+            'unite' => $this->unite,
             'statut' => $this->statut
         ];
     }
@@ -204,8 +204,8 @@ class Produits
             'nom' => $this->nom,
             'description' => $this->description,
             'statut' => $this->statut,
-            'unite'=> $this->unite,
-            'conditionnements' => $this->getConditionnements() ,
+            'unite' => $this->unite,
+            'conditionnements' => $this->getConditionnements(),
         ];
     }
 

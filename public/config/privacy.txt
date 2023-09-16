@@ -1,0 +1,21 @@
+ <h2>Politique</h2> </br> Nous accordons une grande importance à 
+la confidentialité de nos utilisateurs et prenons des mesures pour protéger 
+leurs informations personnelles. Cette politique de confidentialité explique 
+comment nous collectons, utilisons et protégeons les informations que vous nous 
+fournissez lorsque vous utilisez notre application de simulation. <h2> Collecte d'informations </h2> </br>  Nous pouvons collecter des informations vous concernant lorsque vous utilisez notre application de simulation. Les informations que nous collectons peuvent inclure : Votre nom et votre adresse e-mail si vous créez un compte Les informations que vous saisissez dans notre application de simulation Les informations sur la façon dont vous utilisez notre application, telles que les pages que vous visitez et la durée de votre utilisation Utilisation des informations Nous utilisons les informations collectées pour améliorer notre application de simulation et fournir une expérience personnalisée à nos utilisateurs. Nous pouvons également utiliser vos informations pour communiquer avec vous par e-mail ou autrement, pour vous informer des mises à jour de notre application ou pour répondre à vos demandes de support. 
+<h2> Protection </h2> </br>  
+Nous prenons des mesures pour protéger vos informations 
+personnelles contre les accès non autorisés, la modification, la divulgation 
+ou la destruction. Nous utilisons des mesures de sécurité appropriées pour protéger
+ vos informations, y compris des technologies de cryptage et des pare-feu.
+ <h2> Partage </h2> </br> Nous ne vendons ni ne louons vos informations personnelles à des tiers.
+ Nous pouvons partager vos informations avec des fournisseurs de services tiers qui nous aident à 
+fournir notre application de simulation, mais nous ne permettons pas à ces fournisseurs de 
+services d'utiliser vos informations à d'autres fins.<h2> Contactez nous </h2> </br> 
+Si vous avez des questions concernant cette politique de confidentialité ou la manière
+ dont nous gérons vos informations personnelles, n'hésitez pas à nous contacter à
+ l'adresse e-mail suivante : [adresse e-mail de l'entreprise    ].
+ Dernière mise à jour : [date de la dernière mise à jour de la politique de confidentialité  
+  ]. <h2 class='mb-3'  > Modifications </h2> </br>  Nous nous réservons le droit de modifier
+ cette politique de confidentialité à tout moment. Nous vous recommandons de consulter 
+régulièrement cette page pour être informé des changements éventuels.

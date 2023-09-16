@@ -14,6 +14,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
     denormalizationContext: ['groups' => ['write']],
 
 )]
+
+#[ORM\Table(name: '`simlait_unite_demande_suivis`')]
 class UnitesDemandeSuivi
 {
     #[ORM\Id]

@@ -15,6 +15,7 @@ use Symfony\Component\Serializer\Annotation\Groups;
     denormalizationContext: ['groups' => ['write']],
 )]
 
+#[ORM\Table(name: '`simlait_conditionnements`')]
 class Conditionnements
 {
     #[ORM\Id]

@@ -2,6 +2,7 @@
 
 namespace App\EventListener;
 
+use App\Entity\User;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Event\AuthenticationSuccessEvent;
 
@@ -17,7 +18,7 @@ class AuthenticationSuccessListener
         $data = $event->getData();
         $user = $event->getUser();
 
-        if (!$user instanceof UserInterface) {
+        if (!$user instanceof User || !$user instanceof UserInterface) {
             return;
         }
 
@@ -27,18 +28,19 @@ class AuthenticationSuccessListener
             'firstName' => $user->getFirstName(),
             'lastName' => $user->getLastName(),
             'email' => $user->getEmail(),
-            'phone' => $user->getPhone(),
+            'username' => $user->getUsername(),
             'phone' => $user->getPhone(),
             'enabled' => $user->getEnabled(),
             'isActiveNow' => $user->getIsActiveNow(),
             'lastActivityAt' => $user->getLastActivityAt(),
-            'pass' => $user->getPass(),
             'sexe' => $user->getSexe(),
             'status' => $user->getStatus(),
             'adresse' => $user->getAdresse(),
             'sent' => $user->getSent(),
             'received' => $user->getReceived(),
+            'departement' => $user->getDepartement()->asArrayUser() ?  $user->getDepartement()->asArrayUser() : null,
             'avatar' => $user->getAvatar(),
+            'zoneIntervention' => $user->getZoneIntervention(),
         );
 
         $event->setData($data);

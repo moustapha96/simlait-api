@@ -2,11 +2,10 @@
 
 namespace App\Repository;
 
-use App\Doctrine\EntityManagerFactory;
 use App\Entity\Collecte;
+use App\Entity\Unites;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use App\Function\Month;
 
 /**
  * @method Collecte|null find($id, $lockMode = null, $lockVersion = null)
@@ -21,34 +20,216 @@ class CollecteRepository extends ServiceEntityRepository
         parent::__construct($registry, Collecte::class);
     }
 
-    // /**
-    //  * @return Collecte[] Returns an array of Collecte objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('c.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
 
-    /*
-    public function findOneBySomeField($value): ?Collecte
+    public function getCollecteEvolutionPrix($dateDebut, $dateFin)
     {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
+        $dd = new \DateTime($dateDebut);
+        $df = new \DateTime($dateFin);
+
+        $qb = $this->createQueryBuilder('col');
+
+        if ($dateDebut != '' && $dateFin != '') {
+            $qb->leftJoin('col.unites', 'unit')
+                ->leftJoin('unit.profil', 'prof')
+                ->select('prof.nom as profil')
+                ->addSelect('col.dateCollecte as date')
+                ->addSelect('col.prix as prix')
+                ->where($qb->expr()->andX($qb->expr()->andX(
+                    $qb->expr()->between('col.dateCollecte', ':dateDebut', ':dateFin')
+                )))
+                ->setParameter('dateDebut', $dd)
+                ->setParameter('dateFin', $df)
+                ->groupBy('profil')
+                ->groupBy('date')
+                ->orderBy('col.dateCollecte', 'ASC');
+        } else {
+            $qb->leftJoin('col.unites', 'unit')
+                ->leftJoin('unit.profil', 'prof')
+                ->select('prof.nom as profil')
+                ->addSelect('col.dateCollecte as date')
+                ->addSelect('col.prix as prix')
+                ->groupBy('profil')
+                ->groupBy('date')
+                ->orderBy('col.dateCollecte', 'ASC');
+        }
+        return $qb->getQuery()->getResult();
     }
-    */
+
+
+    public function getCollecteEvolutionQuantite($dateDebut, $dateFin)
+    {
+        $dd = new \DateTime($dateDebut);
+        $df = new \DateTime($dateFin);
+
+        $qb = $this->createQueryBuilder('col');
+
+        if ($dateDebut != '' && $dateFin != '') {
+            $qb->leftJoin('col.unites', 'unit')
+                ->leftJoin('unit.profil', 'prof')
+                ->select('prof.nom as profil')
+                ->addSelect('col.dateCollecte as date')
+                ->addSelect('col.prix as prix')
+                ->where($qb->expr()->andX($qb->expr()->andX(
+                    $qb->expr()->between('col.dateCollecte', ':dateDebut', ':dateFin')
+                )))
+                ->setParameter('dateDebut', $dd)
+                ->setParameter('dateFin', $df)
+                ->groupBy('profil')
+                ->groupBy('date')
+                ->orderBy('col.dateCollecte', 'ASC');
+        } else {
+            $qb->leftJoin('col.unites', 'unit')
+                ->leftJoin('unit.profil', 'prof')
+                ->select('prof.nom as profil')
+                ->addSelect('col.dateCollecte as date')
+                ->addSelect('col.prix as prix')
+                ->groupBy('profil')
+                ->groupBy('date')
+                ->orderBy('col.dateCollecte', 'ASC');
+        }
+        return $qb->getQuery()->getResult();
+    }
+
+
+    public function getCollecteEvolutionSaison($dateDebut, $dateFin)
+    {
+        $dd = new \DateTime($dateDebut);
+        $df = new \DateTime($dateFin);
+
+        $qb = $this->createQueryBuilder('col');
+        $qb->leftJoin('col.unites', 'unit')
+            ->leftJoin('unit.profil', 'prof')
+            ->select('prof.nom as profil')
+            ->addSelect('col.dateCollecte as date')
+            ->addSelect('col.prix as prix')
+            ->addSelect('SUM( col.quantite)  as quantite')
+            ->where($qb->expr()->andX($qb->expr()->andX(
+                $qb->expr()->between('col.dateCollecte', ':dateDebut', ':dateFin')
+            )))
+            ->setParameter('dateDebut', $dd)
+            ->setParameter('dateFin', $df)
+            ->groupBy('profil')
+            ->groupBy('date')
+            ->orderBy('col.dateCollecte', 'ASC');
+
+        return $qb->getQuery()->getResult();
+    }
+
+
+    public function getCollecteEvolution($dateDebut, $dateFin)
+    {
+        $dd = new \DateTime($dateDebut);
+        $df = new \DateTime($dateFin);
+        $qb = $this->createQueryBuilder('col');
+
+        if ($dateDebut != '' && $dateFin != '') {
+            $qb->leftJoin('col.unites', 'unit')
+                ->leftJoin('unit.profil', 'prof')
+                ->select('prof.nom as profil')
+                ->addSelect('col.dateCollecte as date')
+                ->addSelect('SUM( col.quantite)  as quantite')
+                ->where($qb->expr()->andX($qb->expr()->andX(
+                    $qb->expr()->between('col.dateCollecte', ':dateDebut', ':dateFin')
+                )))
+                ->setParameter('dateDebut', $dd)
+                ->setParameter('dateFin', $df)
+                ->groupBy('profil')
+                ->groupBy('date')
+                ->orderBy('col.dateCollecte', 'ASC');
+        } else {
+            $qb->leftJoin('col.unites', 'unit')
+                ->leftJoin('unit.profil', 'prof')
+                ->select('prof.nom as profil')
+                ->addSelect('col.dateCollecte as date')
+                ->addSelect('SUM( col.quantite)  as quantite')
+                ->groupBy('profil')
+                ->groupBy('date')
+                ->orderBy('col.dateCollecte', 'ASC');
+        }
+        return $qb->getQuery()->getResult();
+    }
+
+    public function getDateRangeForWeek($year, $week)
+    {
+        $dto = new \DateTime();
+        $dto->setISODate($year, $week);
+        $start = $dto->format('Y-m-d 00:00:00');
+        $end = $dto->modify('+6 days')->format('Y-m-d 23:59:59');
+        return [$start, $end];
+    }
+
+    public function findDatePeriode()
+    {
+        $periodes = ['Quotidien', 'Hebdomadaire', 'Mensuel', 'Trimestriel', 'Semestriel', 'Annuel'];
+        $resultats = array();
+        foreach ($periodes as $periode) {
+            switch ($periode) {
+                case 'Quotidien':
+                    $start = date('Y-m-d 00:00:00');
+                    $end = date('Y-m-d 23:59:59');
+                    $resultats['Quotidien']['start'] = $start;
+                    $resultats['Quotidien']['end'] = $end;
+                    break;
+                case 'Hebdomadaire':
+                    $week = date('W');
+                    $year = date('Y');
+                    list($start, $end) = $this->getDateRangeForWeek($year, $week);
+                    $resultats['Hebdomadaire']['start'] = $this->getDateRangeForWeek($year, $week)[0];
+                    $resultats['Hebdomadaire']['end'] = $this->getDateRangeForWeek($year, $week)[1];
+                    break;
+                case 'Mensuel':
+                    $start = date('Y-m-01 00:00:00');
+                    $end = date('Y-m-t 23:59:59');
+                    $resultats['Mensuel']['start'] = $start;
+                    $resultats['Mensuel']['end'] = $end;
+                    break;
+                case 'Trimestriel':
+                    $trimestre = ceil((date('n') / 3));
+                    $start = date('Y-m-d 00:00:00', mktime(0, 0, 0, ($trimestre - 1) * 3 + 1, 1, date('Y')));
+                    $end = date('Y-m-d 23:59:59', mktime(0, 0, 0, $trimestre * 3, 0, date('Y')));
+
+                    $resultats['Trimestriel']['start'] = $start;
+                    $resultats['Trimestriel']['end'] = $end;
+                    break;
+                case 'Semestriel':
+                    $semestre = ceil((date('n') / 6));
+                    $start = date('Y-m-d 00:00:00', mktime(0, 0, 0, ($semestre - 1) * 6 + 1, 1, date('Y')));
+                    $end = date('Y-m-d 23:59:59', mktime(0, 0, 0, $semestre * 6, 0, date('Y')));
+
+                    $resultats['Semestriel']['start'] = $start;
+                    $resultats['Semestriel']['end'] = $end;
+                    break;
+                case 'Annuel':
+                    $start = date('Y-01-01 00:00:00');
+                    $end = date('Y-12-31 23:59:59');
+                    $resultats['Annuel']['start'] = $start;
+                    $resultats['Annuel']['end'] = $end;
+                    break;
+            }
+        }
+        return $resultats;
+    }
+
+
+    public function findQuantiteByPeriode(int $id, $start, $end)
+    {
+        $qb = $this->createQueryBuilder('collecte');
+        $qb->leftJoin('collecte.unites', 'unit');
+        $qb->select('SUM(collecte.quantite) as quantite')
+            ->addSelect('SUM(collecte.quantite_vendu) as quantite_vendue')
+            ->addSelect('SUM(collecte.quantite_perdu) as quantite_perdue')
+            ->addSelect('SUM(collecte.quantite_autre) as quantite_autre')
+            // ->addSelect("DATE_FORMAT(collecte.dateCollecte, '%Y-%m-%d') as date_collecte")
+            ->where('unit.id = :id')
+            ->andWhere('collecte.dateCollecte BETWEEN :datemin AND :datemax')
+            ->andWhere('collecte.isCertified = true')
+            ->setParameter('id', $id)
+            ->setParameter('datemin', $start)
+            ->setParameter('datemax', $end);
+        // ->groupBy('dateCollecte');
+        return  $qb->getQuery()->getResult();
+    }
+
 
     public function getLowPrice()
     {
@@ -83,6 +264,69 @@ class CollecteRepository extends ServiceEntityRepository
             return $qb->getQuery()->getResult();
         }
     }
+
+
+    public function getCollecteDepartement(
+        string $departement,
+        int $page,
+        int  $itemsPerPage,
+    ) {
+        $qb = $this->createQueryBuilder('col');
+        $qb->addSelect('lait')->join('col.unites', 'lait')
+            ->addSelect('deprt')->join('lait.departement', 'deprt')
+            ->where('deprt.nom = :departement')
+            ->setParameter('departement', $departement)
+            ->setFirstResult(($page) * $itemsPerPage)
+            ->setMaxResults($itemsPerPage)
+            ->orderBy('col.id', 'DESC');
+        return $qb->getQuery()->getResult();
+    }
+
+    public function getCollecteZoneIntervention(
+        array $zones,
+        int $page,
+        int $itemsPerPage,
+    ) {
+        $offset = max(0, ($page - 1) * $itemsPerPage);
+        $qb = $this->createQueryBuilder('col');
+        $qb->addSelect('lait')->join('col.unites', 'lait')
+            ->addSelect('deprt')->join('lait.departement', 'deprt')
+            ->addSelect('region')->join('lait.region', 'region')
+            ->where($qb->expr()->in('region.nom', ':regions'))
+            ->setParameter('regions', $zones)
+            ->setFirstResult($offset)
+            ->setMaxResults($itemsPerPage)
+            ->orderBy('col.id', 'DESC');
+        return $qb->getQuery()->getResult();
+    }
+
+
+
+    public function getCollecteDepartementSize(
+        string $departement
+    ) {
+        $qb = $this->createQueryBuilder('col');
+        $qb->addSelect('lait')->join('col.unites', 'lait')
+            ->addSelect('deprt')->join('lait.departement', 'deprt')
+            ->where('deprt.nom = :departement')
+            ->setParameter('departement', $departement)
+            ->orderBy('col.id', 'DESC');
+        return $qb->getQuery()->getResult();
+    }
+    public function getCollecteZoneSize(
+        array $zone
+    ) {
+        $qb = $this->createQueryBuilder('col');
+        $qb->addSelect('lait')->join('col.unites', 'lait')
+            ->addSelect('region')->join('lait.region', 'region')
+            ->where($qb->expr()->in('region.nom', ':regions'))
+            ->setParameter('regions', $zone)
+            ->orderBy('col.id', 'DESC');
+        return $qb->getQuery()->getResult();
+    }
+
+
+
 
     public function groupCollectebyZone(
         string $dateDebut,
@@ -171,7 +415,11 @@ class CollecteRepository extends ServiceEntityRepository
         }
     }
 
+
     public function findAllByCriteria(
+        int  $itemsPerPage,
+        int $page,
+        string $user,
         string $region,
         string $department,
         string $zone,
@@ -183,6 +431,12 @@ class CollecteRepository extends ServiceEntityRepository
         string $dateFin
     ) {
 
+        $prenom = "";
+        $nom = "";
+        if ($user != '') {
+            $prenom = explode(" ", $user)[0];
+            $nom = explode(" ", $user)[1];
+        }
 
         if ($dateDebut != null && $dateFin != null) {
             $dd = new \DateTime($dateDebut);
@@ -193,13 +447,12 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('lait')->join('col.unites', 'lait')
                 ->addSelect('emb')->join('col.emballages', 'emb')
                 ->addSelect('prod')->join('col.produits', 'prod')
-
+                ->addSelect('user')->join('col.user', 'user')
                 ->addSelect('profil')->join('lait.profil', 'profil')
 
                 ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.region = reg')
                 ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.zone = zon')
                 ->innerJoin('App\Entity\Departement', 'depart', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.departement = depart')
-
 
                 ->where($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('prod.nom', ':produit'),
@@ -210,8 +463,12 @@ class CollecteRepository extends ServiceEntityRepository
                     $qb->expr()->like('depart.nom', ':departement'),
                     $qb->expr()->like('reg.nom', ':region'),
                     $qb->expr()->between('col.dateCollecte', ':dateDebut', ':dateFin'),
-
+                    $qb->expr()->like('user.prenom', ':prenom'),
+                    $qb->expr()->like('user.nom', ':nom'),
                 )))
+
+                ->setParameter('prenom', '%' . $prenom . '%')
+                ->setParameter('nom', '%' . $nom . '%')
                 ->setParameter('produit', '%' . $produit . '%')
                 ->setParameter('conditionnement', '%' . $conditionnement . '%')
                 ->setParameter('laiterie', '%' . $unites . '%')
@@ -221,23 +478,25 @@ class CollecteRepository extends ServiceEntityRepository
                 ->setParameter('region', '%' . $region . '%')
                 ->setParameter('dateDebut', $dd)
                 ->setParameter('dateFin', $df)
+                ->setFirstResult(($page) * $itemsPerPage)
+                ->setMaxResults($itemsPerPage)
                 ->orderBy('col.id', 'DESC');
             return $qb->getQuery()->getResult();
         } else {
+
             $qb = $this->createQueryBuilder('col');
             $qb->addSelect('condi')->join('col.conditionnements', 'condi')
                 ->addSelect('lait')->join('col.unites', 'lait')
                 ->addSelect('emb')->join('col.emballages', 'emb')
                 ->addSelect('prod')->join('col.produits', 'prod')
                 ->addSelect('profil')->join('lait.profil', 'profil')
-
-
+                ->addSelect('user')->join('col.user', 'user')
                 ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.region = reg')
                 ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.zone = zon')
                 ->innerJoin('App\Entity\Departement', 'depart', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.departement = depart')
 
-
                 ->where($qb->expr()->andX($qb->expr()->andX(
+
                     $qb->expr()->like('prod.nom', ':produit'),
                     $qb->expr()->like('condi.nom', ':conditionnement'),
                     $qb->expr()->like('lait.nom', ':laiterie'),
@@ -245,8 +504,13 @@ class CollecteRepository extends ServiceEntityRepository
                     $qb->expr()->like('zon.nom', ':zone'),
                     $qb->expr()->like('depart.nom', ':departement'),
                     $qb->expr()->like('reg.nom', ':region'),
+                    $qb->expr()->like('user.prenom', ':prenom'),
+                    $qb->expr()->like('user.nom', ':nom'),
+
                 )))
 
+                ->setParameter('prenom', '%' . $prenom . '%')
+                ->setParameter('nom', '%' . $nom . '%')
                 ->setParameter('produit', '%' . $produit . '%')
                 ->setParameter('conditionnement', '%' . $conditionnement . '%')
                 ->setParameter('laiterie', '%' . $unites . '%')
@@ -254,9 +518,38 @@ class CollecteRepository extends ServiceEntityRepository
                 ->setParameter('departement', '%' . $department . '%')
                 ->setParameter('emballage', '%' . $emballage . '%')
                 ->setParameter('region', '%' . $region . '%')
+                ->setFirstResult(($page) * $itemsPerPage)
+                ->setMaxResults($itemsPerPage)
                 ->orderBy('col.id', 'DESC');
+
             return $qb->getQuery()->getResult();
         }
+    }
+
+    public function findAllDataBrute(
+        int  $itemsPerPage,
+        int $page,
+    ) {
+        $qb = $this->createQueryBuilder('col');
+        $qb->addSelect('condi')->join('col.conditionnements', 'condi')
+            ->addSelect('lait')->join('col.unites', 'lait')
+            ->addSelect('emb')->join('col.emballages', 'emb')
+            ->addSelect('prod')->join('col.produits', 'prod')
+            ->addSelect('profil')->join('lait.profil', 'profil')
+            ->addSelect('user')->join('col.user', 'user')
+            ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.region = reg')
+            ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.zone = zon')
+            ->innerJoin('App\Entity\Departement', 'depart', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.departement = depart')
+
+            ->setFirstResult(($page) * $itemsPerPage)
+            ->setMaxResults($itemsPerPage)
+            ->orderBy('col.id', 'DESC');
+        return $qb->getQuery()->getResult();
+    }
+
+
+    public function findStatCertified()
+    {
     }
 
 
@@ -270,9 +563,8 @@ class CollecteRepository extends ServiceEntityRepository
         string $unites,
         string $emballage,
         string $dateDebut,
-        string $dateFin
+        string $dateFin,
     ) {
-
 
         if ($dateDebut != null && $dateFin != null) {
             $dd = new \DateTime($dateDebut);
@@ -283,13 +575,10 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('lait')->join('col.unites', 'lait')
                 ->addSelect('emb')->join('col.emballages', 'emb')
                 ->addSelect('prod')->join('col.produits', 'prod')
-
                 ->addSelect('profil')->join('lait.profil', 'profil')
-
                 ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.region = reg')
                 ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.zone = zon')
                 ->innerJoin('App\Entity\Departement', 'depart', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.departement = depart')
-
                 ->where('profil.nom = :profil')
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('prod.nom', ':produit'),
@@ -315,18 +604,16 @@ class CollecteRepository extends ServiceEntityRepository
                 ->orderBy('col.id', 'DESC');
             return $qb->getQuery()->getResult();
         } else {
+
             $qb = $this->createQueryBuilder('col');
             $qb->addSelect('condi')->join('col.conditionnements', 'condi')
                 ->addSelect('lait')->join('col.unites', 'lait')
                 ->addSelect('emb')->join('col.emballages', 'emb')
                 ->addSelect('prod')->join('col.produits', 'prod')
                 ->addSelect('profil')->join('lait.profil', 'profil')
-
-
                 ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.region = reg')
                 ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.zone = zon')
                 ->innerJoin('App\Entity\Departement', 'depart', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.departement = depart')
-
                 ->where('profil.nom = :profil')
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('prod.nom', ':produit'),
@@ -337,7 +624,6 @@ class CollecteRepository extends ServiceEntityRepository
                     $qb->expr()->like('depart.nom', ':departement'),
                     $qb->expr()->like('reg.nom', ':region'),
                 )))
-
                 ->setParameter('produit', '%' . $produit . '%')
                 ->setParameter('conditionnement', '%' . $conditionnement . '%')
                 ->setParameter('laiterie', '%' . $unites . '%')
@@ -346,7 +632,9 @@ class CollecteRepository extends ServiceEntityRepository
                 ->setParameter('emballage', '%' . $emballage . '%')
                 ->setParameter('region', '%' . $region . '%')
                 ->setParameter('profil', $profil)
+
                 ->orderBy('col.id', 'DESC');
+
             return $qb->getQuery()->getResult();
         }
     }
@@ -379,132 +667,6 @@ class CollecteRepository extends ServiceEntityRepository
         }
     }
 
-    public function groupPCD(
-        string $dateDebut,
-        string $dateFin
-    ) {
-
-        if ($dateDebut != null && $dateFin != null) {
-            $dd = new \DateTime($dateDebut);
-            $df = new \DateTime($dateFin);
-            $qb = $this->createQueryBuilder('col');
-            $qb->addSelect('condi')->join('col.conditionnements', 'condi')
-                ->addSelect('condi.nom as conditionnement')
-                ->addSelect('lait')->join('col.unites', 'lait')
-                ->addSelect('emb')->join('col.emballages', 'emb')
-                ->addSelect('prod')->join('col.produits', 'prod')
-                ->addSelect('prod.nom as produit')
-                ->addSelect('MAX (col.prix) as prix_max')
-                ->addSelect('MIN (col.prix) as prix_min')
-                ->addSelect('AVG (col.prix) as prix_moyen')
-                ->where($qb->expr()->andX($qb->expr()->andX(
-                    $qb->expr()->between('col.dateCollecte', ':dateDebut', ':dateFin'),
-                )))
-                ->where('col.isCertified = true')
-                ->groupBy('condi.nom')
-                ->addGroupBy('produit')
-                ->setParameter('dateDebut', $dd)
-                ->setParameter('dateFin', $df)
-                ->orderBy('col.id', 'DESC');
-            return $qb->getQuery()->getResult();
-        } else {
-            $qb = $this->createQueryBuilder('col');
-            $qb->addSelect('condi')->join('col.conditionnements', 'condi')
-                ->addSelect('condi.nom as conditionnement')
-                ->addSelect('lait')->join('col.unites', 'lait')
-                ->addSelect('emb')->join('col.emballages', 'emb')
-                ->addSelect('prod')->join('col.produits', 'prod')
-                ->addSelect('prod.nom as produit')
-                ->addSelect('col as collecte')
-                ->addSelect('MAX (col.prix) as prix_max')
-                ->addSelect('MIN (col.prix) as prix_min')
-                ->addSelect('AVG (col.prix) as prix_moyen')
-                ->addSelect('SUM(col.quantite) as quantite_total')
-                ->where('col.isCertified = true')
-                ->groupBy('prod.id')
-                // ->addGroupBy('produit')
-                ->orderBy('col.id', 'DESC');
-            return $qb->getQuery()->getResult();
-        }
-    }
-
-    public function findGroupPCD(
-        string $region,
-        string $department,
-        string $zone,
-        string $dateDebut,
-        string $dateFin
-    ) {
-
-
-        if ($dateDebut != null && $dateFin != null) {
-            $dd = new \DateTime($dateDebut);
-            $df = new \DateTime($dateFin);
-
-            $qb = $this->createQueryBuilder('col');
-            $qb->addSelect('condi')->join('col.conditionnements', 'condi')
-                ->addSelect('condi.nom as conditionnement')
-                ->addSelect('lait')->join('col.unites', 'lait')
-                ->addSelect('emb')->join('col.emballages', 'emb')
-                ->addSelect('prod')->join('col.produits', 'prod')
-
-                ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.region = reg')
-                ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.zone = zon')
-                ->innerJoin('App\Entity\Departement', 'depart', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.departement = depart')
-
-                ->addSelect('prod.nom as produit')
-                ->addSelect('MAX (col.prix) as prix_max')
-                ->addSelect('MIN (col.prix) as prix_min')
-                ->addSelect('AVG (col.prix) as prix_moyen')
-                ->where($qb->expr()->andX($qb->expr()->andX(
-                    $qb->expr()->like('zon.nom', ':zone'),
-                    $qb->expr()->like('depart.nom', ':departement'),
-                    $qb->expr()->like('reg.nom', ':region'),
-                    $qb->expr()->between('col.dateCollecte', ':dateDebut', ':dateFin'),
-                )))
-                ->groupBy('condi.nom')
-                ->addGroupBy('produit')
-                ->setParameter('zone', '%' . $zone . '%')
-                ->setParameter('departement', '%' . $department . '%')
-                ->setParameter('region', '%' . $region . '%')
-                ->setParameter('dateDebut', $dd)
-                ->setParameter('dateFin', $df)
-                ->orderBy('col.id', 'DESC');
-            return $qb->getQuery()->getResult();
-        } else {
-            $qb = $this->createQueryBuilder('col');
-            $qb->addSelect('condi')->join('col.conditionnements', 'condi')
-                ->addSelect('condi.nom as conditionnement')
-                ->addSelect('lait')->join('col.unites', 'lait')
-                ->addSelect('emb')->join('col.emballages', 'emb')
-                ->addSelect('prod')->join('col.produits', 'prod')
-
-                ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.region = reg')
-                ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.zone = zon')
-                ->innerJoin('App\Entity\Departement', 'depart', \Doctrine\ORM\Query\Expr\Join::WITH, 'lait.departement = depart')
-
-                ->addSelect('prod.nom as produit')
-                ->addSelect('col as collecte')
-                ->addSelect('MAX (col.prix) as prix_max')
-                ->addSelect('MIN (col.prix) as prix_min')
-                ->addSelect('AVG (col.prix) as prix_moyen')
-
-                ->addSelect('SUM(col.quantite) as quantite_total')
-                ->where($qb->expr()->andX($qb->expr()->andX(
-                    $qb->expr()->like('zon.nom', ':zone'),
-                    $qb->expr()->like('depart.nom', ':departement'),
-                    $qb->expr()->like('reg.nom', ':region'),
-                )))
-
-                ->groupBy('condi.nom')
-                ->addGroupBy('produit')
-                ->setParameter('zone', '%' . $zone . '%')
-                ->setParameter('departement', '%' . $department . '%')
-                ->setParameter('region', '%' . $region . '%')
-                ->orderBy('col.id', 'DESC');
-            return $qb->getQuery()->getResult();
-        }
-    }
 
     public function findPC(
         string $produit,
@@ -539,6 +701,7 @@ class CollecteRepository extends ServiceEntityRepository
             ->addSelect('emb.nom as emballage')
 
             ->where('collecte.isCertified = true')
+            ->andWhere('unit.isCertified = true')
             ->andWhere($qb->expr()->andX($qb->expr()->andX(
                 $qb->expr()->like('prod.nom', ':produit'),
                 $qb->expr()->like('condi.nom', ':conditionnement'),
@@ -554,12 +717,6 @@ class CollecteRepository extends ServiceEntityRepository
             ->innerJoin('App\Entity\Unites', 'unit', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.unites = unit')
             ->innerJoin('App\Entity\Emballage', 'emb', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.emballages = emb')
             ->innerJoin('App\Entity\Conditionnements', 'condi', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.conditionnements = condi')
-
-
-            // ->leftJoin('collecte.produits', 'prod')
-            // ->leftJoin('collecte.unites', 'unit')
-            // ->leftJoin('collecte.emballages', 'emb')
-            // ->leftJoin('collecte.conditionnements', 'condi')
 
             ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'unit.region = reg')
             ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'unit.zone = zon')
@@ -618,6 +775,7 @@ class CollecteRepository extends ServiceEntityRepository
 
                 ->addSelect('col.prix as prix')
                 ->addSelect('prod.nom as produit')
+                ->addSelect('prod.unite as unite')
 
                 ->where($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('zon.nom', ':zone'),
@@ -774,32 +932,44 @@ class CollecteRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
-    public function  findCollecteEleveur()
-    {
+
+
+    public function  findCollecteEleveur(
+        int  $itemsPerPage,
+        int $page
+    ) {
         $qb = $this->createQueryBuilder('collecte');
         $qb->select('collecte');
         $qb->addSelect('unites')->join('collecte.unites', 'unites')
             ->addSelect('profil')->join('unites.profil', 'profil')
             ->where('profil.id = :profil')
             ->setParameter('profil', 5)
-
+            ->setFirstResult(($page) * $itemsPerPage)
+            ->setMaxResults($itemsPerPage)
             ->orderBy('collecte.id', 'DESC');
         return $qb->getQuery()->getResult();
     }
-    public function  findCollecteProducteur()
-    {
+
+    public function  findCollecteProducteur(
+        int  $itemsPerPage,
+        int $page
+    ) {
         $qb = $this->createQueryBuilder('collecte');
         $qb->select('collecte');
         $qb->addSelect('unites')->join('collecte.unites', 'unites')
             ->addSelect('profil')->join('unites.profil', 'profil')
             ->where('profil.id = :profil')
             ->setParameter('profil', 6)
-
+            ->setFirstResult(($page) * $itemsPerPage)
+            ->setMaxResults($itemsPerPage)
             ->orderBy('collecte.id', 'DESC');
         return $qb->getQuery()->getResult();
     }
-    public function  findCollecteCollecteur()
-    {
+
+    public function  findCollecteCollecteur(
+        int  $itemsPerPage,
+        int $page
+    ) {
         $qb = $this->createQueryBuilder('collecte');
         $qb->select('collecte');
         $qb->addSelect('unites')->join('collecte.unites', 'unites')
@@ -807,29 +977,41 @@ class CollecteRepository extends ServiceEntityRepository
             ->where('profil.id = :profil')
             ->setParameter('profil', 4)
 
+            ->setFirstResult(($page) * $itemsPerPage)
+            ->setMaxResults($itemsPerPage)
+
             ->orderBy('collecte.id', 'DESC');
         return $qb->getQuery()->getResult();
     }
-    public function  findCollecteCommercants()
-    {
+
+    public function  findCollecteCommercants(
+        int  $itemsPerPage,
+        int $page
+    ) {
         $qb = $this->createQueryBuilder('collecte');
         $qb->addSelect('unites')->join('collecte.unites', 'unites')
             ->addSelect('profil')->join('unites.profil', 'profil')
             ->where('profil.id = :profil')
             ->setParameter('profil', 3)
-
+            ->setFirstResult(($page) * $itemsPerPage)
+            ->setMaxResults($itemsPerPage)
             ->orderBy('collecte.id', 'DESC');
         return $qb->getQuery()->getResult();
     }
-    public function  findCollecteTransformateur()
-    {
+
+
+    public function  findCollecteTransformateur(
+        int  $itemsPerPage,
+        int $page
+    ) {
         $qb = $this->createQueryBuilder('collecte');
         $qb->select('collecte');
         $qb->addSelect('unites')->join('collecte.unites', 'unites')
             ->addSelect('profil')->join('unites.profil', 'profil')
             ->where('profil.id = :profil')
             ->setParameter('profil', 7)
-
+            ->setFirstResult(($page) * $itemsPerPage)
+            ->setMaxResults($itemsPerPage)
             ->orderBy('collecte.id', 'DESC');
         return $qb->getQuery()->getResult();
     }
@@ -844,6 +1026,7 @@ class CollecteRepository extends ServiceEntityRepository
         $qb->select('collecte');
         $qb->addSelect('unites')->join('collecte.unites', 'unites')
             ->addSelect('profil')->join('unites.profil', 'profil')
+            ->where('collecte.isCertified = true')
             ->addSelect('profil.nom as name, count(collecte.id) as nbre')
             ->orderBy('collecte.id', 'DESC');
         return $qb->getQuery()->getResult();
@@ -854,26 +1037,38 @@ class CollecteRepository extends ServiceEntityRepository
     public function getCollecteNowMonth()
     {
         $time = new \DateTime();
-        $datenow =  $time->format('Y-m-d  00:00:00');
-        $datenowm = $time->format('Y-m-d  23:59:59');
+        // Définir la date de début sur le premier jour du mois en cours
+        $datemin = $time->format('Y-m-01 00:00:00');
+
+        // Définir la date de fin sur le dernier jour du mois en cours
+        $datemax = $time->format('Y-m-t 23:59:59');
 
         $qb = $this->createQueryBuilder('collecte');
         $qb->select('count(collecte.id) as nbre')
             ->where('collecte.dateCollecte  BETWEEN :datemin AND  :datemax  ')
-            ->setParameter('datemin', $datenow)
-            ->setParameter('datemax', $datenowm);
+            ->andWhere('collecte.isCertified = true')
+            ->setParameter('datemin', $datemin)
+            ->setParameter('datemax', $datemax);
 
         return $qb->getQuery()->getResult();
     }
 
     public function getCollectepreviousMonth()
     {
-        $datemin = date('Y-m-d 00:00:00', strtotime("-1 day"));
-        $datemax = date('Y-m-d 23:59:59', strtotime("-1 day"));
+        $time = new \DateTime();
+        // Définir la date de début sur le premier jour du mois précédent
+        $time->modify('first day of last month');
+
+        $datemax = $time->format('Y-m-d 00:00:00');
+        // Définir la date de fin sur le dernier jour du mois précédent
+        $time->modify('last day of last month');
+
+        $datemin = $time->format('Y-m-d 23:59:59');
 
         $qb = $this->createQueryBuilder('collecte');
         $qb->select('count(collecte.id) as nbre')
             ->where('collecte.dateCollecte  BETWEEN  :datemin AND :datemax  ')
+            ->andWhere('collecte.isCertified = true')
             ->setParameter('datemin', $datemin)
             ->setParameter('datemax', $datemax);
 
@@ -884,15 +1079,22 @@ class CollecteRepository extends ServiceEntityRepository
     public function getUniteNowMonth()
     {
 
+
+
         $time = new \DateTime();
-        $datenow =  $time->format('Y-m-d  00:00:00');
-        $datenowm = $time->format('Y-m-d  23:59:59');
+        // Définir la date de début sur le premier jour du mois en cours
+        $datemin = $time->format('Y-m-01 00:00:00');
+
+        // Définir la date de fin sur le dernier jour du mois en cours
+        $datemax = $time->format('Y-m-t 23:59:59');
+
         $qb = $this->createQueryBuilder('collecte');
         $qb->innerJoin('App\Entity\Unites', 'unites', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.unites = unites')
             ->select('count(unites.id) as nbre')
             ->where('collecte.dateCollecte  BETWEEN :datemin AND  :datemax  ')
-            ->setParameter('datemin', $datenow)
-            ->setParameter('datemax', $datenowm);
+            ->andWhere('collecte.isCertified = true')
+            ->setParameter('datemin', $datemin)
+            ->setParameter('datemax', $datemax);
 
         return $qb->getQuery()->getResult();
     }
@@ -908,6 +1110,7 @@ class CollecteRepository extends ServiceEntityRepository
 
             ->select('count(unites.id) as nbre')
             ->where('collecte.dateCollecte  BETWEEN :datemin AND  :datemax  ')
+            ->andWhere('collecte.isCertified = true')
             ->setParameter('datemin', $datemin)
             ->setParameter('datemax', $datemax);
 
@@ -919,8 +1122,11 @@ class CollecteRepository extends ServiceEntityRepository
     public function getProduitPlusCollecterNow()
     {
         $time = new \DateTime();
-        $datenow =  $time->format('Y-m-d  00:00:00');
-        $datenowm = $time->format('Y-m-d  23:59:59');
+        // Définir la date de début sur le premier jour du mois en cours
+        $datemin = $time->format('Y-m-01 00:00:00');
+        // Définir la date de fin sur le dernier jour du mois en cours
+        $datemax = $time->format('Y-m-t 23:59:59');
+
 
         $qb = $this->createQueryBuilder('collecte');
         $qb->innerJoin('App\Entity\Unites', 'unites', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.unites = unites')
@@ -929,9 +1135,11 @@ class CollecteRepository extends ServiceEntityRepository
             ->select('count(pro.id) as nbre')
             ->addSelect('pro.nom as profil')
             ->where('collecte.dateCollecte  BETWEEN :datemin AND  :datemax  ')
-            ->setParameter('datemin', $datenow)
-            ->setParameter('datemax', $datenowm)
+            ->andWhere('collecte.isCertified = true')
+            ->setParameter('datemin', $datemin)
+            ->setParameter('datemax', $datemax)
             ->groupBy('pro.nom');
+
         return $qb->getQuery()->getResult();
     }
 
@@ -939,8 +1147,12 @@ class CollecteRepository extends ServiceEntityRepository
     public function getProduitPlusCollectePrevious()
     {
         $time = new \DateTime();
-        $datemin = date('Y-m-d 00:00:00', strtotime("-1 day"));
-        $datemax = date('Y-m-d 23:59:59', strtotime("-1 day"));
+        // Définir la date de début sur le premier jour du mois précédent
+        $time->modify('first day of last month');
+        $datemax = $time->format('Y-m-d 00:00:00');
+        // Définir la date de fin sur le dernier jour du mois précédent
+        $time->modify('last day of last month');
+        $datemin = $time->format('Y-m-d 23:59:59');
 
         $qb = $this->createQueryBuilder('collecte');
         $qb->innerJoin('App\Entity\Unites', 'unites', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.unites = unites')
@@ -949,6 +1161,7 @@ class CollecteRepository extends ServiceEntityRepository
             ->select('count(pro.id) as nbre')
             ->addSelect('pro.nom as profil')
             ->where('collecte.dateCollecte  BETWEEN :datemin AND  :datemax  ')
+            ->andWhere('collecte.isCertified = true')
             ->setParameter('datemin', $datemin)
             ->setParameter('datemax', $datemax)
             ->groupBy('pro.nom');
@@ -965,7 +1178,7 @@ class CollecteRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('collecte');
         $qb->innerJoin('App\Entity\Unites', 'unites', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.unites = unites')
             ->innerJoin('App\Entity\Profils', 'pro', \Doctrine\ORM\Query\Expr\Join::WITH, 'unites.profil = pro')
-
+            ->where('collecte.isCertified = true')
             ->select('count(pro.id) as nbre')
             ->addSelect('pro.nom as profil')
             ->groupBy('pro.nom');
@@ -980,7 +1193,7 @@ class CollecteRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('collecte');
         $qb
             ->innerJoin('App\Entity\Produits', 'pro', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.produits = pro')
-
+            ->where('collecte.isCertified = true')
             ->select('count(pro.id) as nbre')
             ->addSelect('pro.nom as produit')
             ->groupBy('pro.nom');
@@ -995,7 +1208,9 @@ class CollecteRepository extends ServiceEntityRepository
         $qb->innerJoin('App\Entity\Produits', 'pro', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.produits = pro')
 
             ->select('SUM(collecte.quantite) as quantiteTotal')
+            ->where('collecte.isCertified = true')
             ->addSelect('pro.nom as produit')
+            ->addSelect('pro.unite as unite')
             ->addSelect("DATE_FORMAT(collecte.dateCollecte, '%Y-%m-%d')  as date")
 
 
@@ -1031,6 +1246,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('condi.nom as conditionnement')
                 ->addSelect('AVG(collecte.prix) as prix_moyen')
                 ->where('collecte.isCertified = true')
+                ->andWhere('unit.isCertified = true')
 
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('zon.nom', ':zone'),
@@ -1081,6 +1297,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('condi.nom as conditionnement')
                 ->addSelect('AVG(collecte.prix) as prix_moyen')
                 ->where('collecte.isCertified = true')
+                ->andWhere('unit.isCertified = true')
 
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('zon.nom', ':zone'),
@@ -1148,6 +1365,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('emb.nom as emballage')
 
                 ->where('collecte.isCertified = true')
+                ->andWhere('unit.isCertified = true')
 
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('zon.nom', ':zone'),
@@ -1206,6 +1424,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('emb.nom as emballage')
 
                 ->where('collecte.isCertified = true')
+                ->andWhere('unit.isCertified = true')
 
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('zon.nom', ':zone'),
@@ -1246,6 +1465,7 @@ class CollecteRepository extends ServiceEntityRepository
     }
 
 
+
     // agregation By Conditionnement:  production grouper par conditionnement
     public function agregationByProfil(
         string $produit,
@@ -1273,6 +1493,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('profil.nom as profils')
                 ->addSelect('condi.nom as conditionnement')
                 ->where('collecte.isCertified = true')
+                ->andWhere('unit.isCertified = true')
 
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('zon.nom', ':zone'),
@@ -1289,11 +1510,6 @@ class CollecteRepository extends ServiceEntityRepository
                 ->leftJoin('collecte.unites', 'unit')
                 ->leftJoin('collecte.emballages', 'emb')
                 ->leftJoin('collecte.conditionnements', 'condi')
-
-                // ->innerJoin('App\Entity\Produits', 'prod', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.produits = prod')
-                // ->innerJoin('App\Entity\Unites', 'unit', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.unites = unit')
-                // ->innerJoin('App\Entity\Emballage', 'emb', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.emballages = emb')
-                // ->innerJoin('App\Entity\Conditionnements', 'condi', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.conditionnements = condi')
 
                 ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'unit.region = reg')
                 ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'unit.zone = zon')
@@ -1330,6 +1546,7 @@ class CollecteRepository extends ServiceEntityRepository
                 ->addSelect('profil.nom as profils')
                 ->addSelect('condi.nom as conditionnement')
                 ->where('collecte.isCertified = true')
+                ->andWhere('unit.isCertified = true')
 
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('zon.nom', ':zone'),
@@ -1341,10 +1558,6 @@ class CollecteRepository extends ServiceEntityRepository
                     $qb->expr()->like('emb.nom', ':emballage'),
                 )))
 
-                // ->leftJoin('collecte.produits', 'prod')
-                // ->leftJoin('collecte.unites', 'unit')
-                // ->leftJoin('collecte.emballages', 'emb')
-                // ->leftJoin('collecte.conditionnements', 'condi')
                 ->innerJoin('App\Entity\Produits', 'prod', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.produits = prod')
                 ->innerJoin('App\Entity\Unites', 'unit', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.unites = unit')
                 ->innerJoin('App\Entity\Emballage', 'emb', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.emballages = emb')
@@ -1372,7 +1585,6 @@ class CollecteRepository extends ServiceEntityRepository
             return $qb->getQuery()->getResult();
         }
     }
-
 
 
     //productions
@@ -1507,11 +1719,5 @@ class CollecteRepository extends ServiceEntityRepository
 
             return $qb->getQuery()->getResult();
         }
-    }
-
-    public function findCollecteMonth()
-    {
-        $month = 2; // février
-        $year = 2023;
     }
 }

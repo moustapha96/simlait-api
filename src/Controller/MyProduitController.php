@@ -3,11 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Produits;
-use App\EventListener\Produit\ProduitCreateEvent;
-use App\EventListener\ProduitEventSubscriber;
 use App\Repository\ConditionnementsRepository;
 use App\Repository\ProduitsRepository;
-use App\Repository\UnitesRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -65,7 +62,7 @@ class MyProduitController extends AbstractController
                 $entityManager->flush();
 
                 if ($produit ==  null) {
-                    throw  new  NotFoundHttpException(" produit non creer ");
+                    throw  new  NotFoundHttpException("Produit non créer ");
                 }
             } else if ($request->getMethod() == 'PUT') {
                 $data = json_decode($request->getContent(), true);
@@ -93,7 +90,7 @@ class MyProduitController extends AbstractController
             }
             return new JsonResponse([], 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -111,24 +108,22 @@ class MyProduitController extends AbstractController
         }
         return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
     }
+
     // profuits utiliser par le transformateur
     /**
      * @Route("/api/produitTransformateurs", name="app_produits_transformateur", methods={"GET"} )
      */
-    public function getProduitTransformateur(ProduitsRepository $produitsRepository, ConditionnementsRepository $condiPro): Response
+    public function getProduitTransformateur(ProduitsRepository $produitsRepository): Response
     {
-
         $produits = $produitsRepository->findTransformateur();
-
         $resultats = [];
         foreach ($produits as $value) {
 
             $resultats[] = $value->asArrayCondi();
         }
-
-
         return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
     }
+
     /**
      * @Route("/api/produitCollecteurs", name="app_produits_collecteur", methods={"GET"} )
      */
@@ -137,15 +132,11 @@ class MyProduitController extends AbstractController
 
         $produits = $produitsRepository->findCollecteur();
         $resultats = [];
-
         foreach ($produits as $value) {
             dump($value->getConditionnements());
             $resultats[] = $value->asArrayCondi();
         }
-
         return  $resultats;
-
-        // return new JsonResponse($resultats,200,["Content-Type" => "application/json"]);
     }
 
     /**
@@ -176,15 +167,4 @@ class MyProduitController extends AbstractController
 
         return new JsonResponse($resultats);
     }
-    // /**
-    //  * @Route("/api/unites/byProfil",name="app_unites_profil",methods={"POST"})
-    //  */
-    // public function getUniteByProfil(Request $request, UnitesRepository $unitesRepository): Response
-    // {
-
-    //     $data = json_decode($request->getContent(), true);
-    //     $unites = $unitesRepository->getUnitebyProfil($data['idProfil']);
-
-    //     dd($unites);
-    // }
 }

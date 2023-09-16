@@ -33,7 +33,9 @@ services:
     tags:
       - { name: kernel.event_listener, event: kernel.controller }
       - { name: kernel.event_listener, event: kernel.request }
-      - { name: kernel.event_listener, event: kernel.exception }
+      # - { name: kernel.event_listener, event: kernel.response }
+      # - { name: kernel.event_listener, event: kernel.exception }
+
   App\EventListener\Unites\UniteEventSubscriber:
     tags:
       - { name: kernel.event_subscriber, event: unite.created }
@@ -78,3 +80,28 @@ services:
     #   - { name: kernel.event_listener, event: kernel.request, method: run }
     tags:
       - { name: kernel.event_subscriber }
+
+  app.jwt_payload_listener:
+    class: App\OpenApi\JwtPayloadListener
+    tags:
+      - {
+          name: kernel.event_listener,
+          event: lexik_jwt_authentication.on_jwt_created,
+          method: onJwtCreated,
+        }
+
+  App\service\OrangeSMSService:
+    arguments:
+      $apiUrl: "%env(ORANGE_API_URL)%"
+      $senderName: "%env(ORANGE_SENDER_NAME)%"
+      $apiKey: "%env(ORANGE_API_KEY)%"
+
+  App\service\RequestErrorLogger:
+    arguments:
+      - "@doctrine.orm.entity_manager"
+    tags:
+      - {
+          name: kernel.event_listener,
+          event: kernel.exception,
+          method: logRequestError,
+        }

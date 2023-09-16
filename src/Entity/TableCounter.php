@@ -14,6 +14,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
     denormalizationContext: ['groups' => ['write']],
 )]
 
+
+#[ORM\Table(name: '`simlait_tables_counters`')]
 class TableCounter
 {
     #[ORM\Id]

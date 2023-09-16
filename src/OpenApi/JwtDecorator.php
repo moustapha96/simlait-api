@@ -9,13 +9,18 @@ use ApiPlatform\Core\OpenApi\Factory\OpenApiFactoryInterface;
 use ApiPlatform\Core\OpenApi\OpenApi;
 use ApiPlatform\Core\OpenApi\Model;
 use ApiPlatform\OpenApi\Factory\OpenApiFactoryInterface as FactoryOpenApiFactoryInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 
 final class JwtDecorator implements FactoryOpenApiFactoryInterface
 {
+
     public function __construct(
         private FactoryOpenApiFactoryInterface $decorated
     ) {
     }
+
+
 
     public function __invoke(array $context = []): OpenApi
     {
@@ -31,6 +36,7 @@ final class JwtDecorator implements FactoryOpenApiFactoryInterface
                 ],
             ],
         ]);
+
         $schemas['Credentials'] = new \ArrayObject([
             'type' => 'object',
             'properties' => [
@@ -84,5 +90,43 @@ final class JwtDecorator implements FactoryOpenApiFactoryInterface
         $openApi->getPaths()->addPath('/authentication_token', $pathItem);
 
         return $openApi;
+    }
+
+
+
+    /**
+     * @Route("/me", name="api_me", methods={"GET"})
+     * @Security("is_granted('ROLE_USER')")
+     */
+    public function me(TokenStorageInterface $tokenStorage): JsonResponse
+    {
+        /** @var UserInterface $user */
+        $user = $tokenStorage->getToken()->getUser();
+
+        $data = [
+            'id' => $user->getId(),
+            'username' => $user->getUsername(),
+            'email' => $user->getEmail(),
+            'roles' => $user->getRoles(),
+            'firstName' => $user->getFirstName(),
+            'lastName' => $user->getLastName(),
+            'phone' => $user->getPhone(),
+            'enabled' => $user->getEnabled(),
+            'isActiveNow' => $user->getIsActiveNow(),
+            'lastActivityAt' => $user->getLastActivityAt(),
+            'sexe' => $user->getSexe(),
+            'status' => $user->getStatus(),
+            'adresse' => $user->getAdresse(),
+            'sent' => $user->getSent(),
+            'received' => $user->getReceived(),
+
+            'departement' => $user->getDepartement()->asArrayUser() ?  $user->getDepartement()->asArrayUser() : null,
+
+            'avatar' => $user->getAvatar(),
+            'zoneIntervention' => $user->getZoneIntervention(),
+
+        ];
+
+        return new JsonResponse($data);
     }
 }

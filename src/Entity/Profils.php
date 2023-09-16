@@ -14,17 +14,18 @@ use Symfony\Component\Serializer\Annotation\Groups;
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
 )]
+
+#[ORM\Table(name: '`simlait_profils`')]
 class Profils
 {
 
     #[ORM\Id]
     #[ORM\Column]
-    #[Groups(["write","read"])]
+    #[Groups(["write", "read"])]
     private ?int $id = null;
 
-
     #[ORM\Column(length: 255)]
-    #[Groups(["write","read"])]
+    #[Groups(["write", "read"])]
     private ?string $nom = null;
 
     #[ORM\ManyToMany(
@@ -41,20 +42,48 @@ class Profils
 
 
     #[ORM\Column(length: 255)]
-    #[Groups(["write","read"])]
+    #[Groups(["write", "read"])]
     private ?string $denomination = null;
 
     #[ORM\OneToMany(mappedBy: 'profil', targetEntity: Unites::class)]
-//    #[Groups(["write","read"])]
+    //    #[Groups(["write","read"])]
     private Collection $unites;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(["write", "read"])]
+    private ?bool $status = null;
+
+    #[ORM\Column(nullable: true)]
+    #[Groups(["write", "read"])]
+    private ?int $quantite = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["write", "read"])]
+    private ?string $periode = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["write", "read"])]
+    private ?string $indicatif = null;
 
     public function __construct()
     {
+
         $this->produits = new ArrayCollection();
         $this->userMobile = new ArrayCollection();
         $this->unites = new ArrayCollection();
     }
 
+
+    public function __toString()
+    {
+        return sprintf('Profil #%d', $this->getId());
+    }
+
+    public function setid(int $id): self
+    {
+        $this->id = $id;
+        return $this;
+    }
 
     public function getId(): ?int
     {
@@ -128,11 +157,15 @@ class Profils
     }
 
 
-    public function asArray(): array{
+    public function asArray(): array
+    {
         return [
             'id' => $this->id,
-            'nom'=> $this->nom,
-            'denomination'=> $this->denomination
+            'nom' => $this->nom,
+            'denomination' => $this->denomination,
+            'status' => $this->status,
+            'quantite' => $this->quantite,
+            'indicatif' => $this->indicatif
         ];
     }
 
@@ -175,6 +208,53 @@ class Profils
                 $unite->setProfil(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isStatus(): ?bool
+    {
+        return $this->status;
+    }
+
+    public function setStatus(?bool $status): self
+    {
+        $this->status = $status;
+
+        return $this;
+    }
+
+    public function getQuantite(): ?int
+    {
+        return $this->quantite;
+    }
+
+    public function setQuantite(?int $quantite): self
+    {
+        $this->quantite = $quantite;
+        return $this;
+    }
+
+    public function getPeriode(): ?string
+    {
+        return $this->periode;
+    }
+
+    public function setPeriode(?string $periode): self
+    {
+        $this->periode = $periode;
+
+        return $this;
+    }
+
+    public function getIndicatif(): ?string
+    {
+        return $this->indicatif;
+    }
+
+    public function setIndicatif(?string $indicatif): self
+    {
+        $this->indicatif = $indicatif;
 
         return $this;
     }

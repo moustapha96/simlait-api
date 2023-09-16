@@ -2,18 +2,28 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\UnitesAutreRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 
+
+#[ApiResource(
+    normalizationContext: ['groups' => ['read']],
+    denormalizationContext: ['groups' => ['write']],
+)]
+
+
+#[ORM\Table(name: '`simlait_unite_autres`')]
 #[ORM\Entity(repositoryClass: UnitesAutreRepository::class)]
 class UnitesAutre
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(["read", "write"])]
     private ?int $id = null;
 
     #[ORM\Column(type: 'string', length: 255)]
@@ -31,8 +41,6 @@ class UnitesAutre
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     #[Groups(["read", "write"])]
     private $email;
-
-   
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Groups(["read", "write"])]
@@ -127,6 +135,11 @@ class UnitesAutre
         return $this;
     }
 
+    public function getDateCreateAt(): ?string
+    {
+        return $this->createdAt->format('d/m/Y');;
+    }
+
     /**
      * @return Collection<int, UnitesDemande>
      */
@@ -157,5 +170,17 @@ class UnitesAutre
         return $this;
     }
 
-   
+    public function asArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'nom' => $this->nom,
+            "prenom" => $this->prenom,
+            "telephone" => $this->telephone,
+            "email" => $this->email,
+            "adresse" => $this->adresse,
+            // "createdAt" => $this->getDateCreateAt(),
+            "createdAt" => $this->createdAt,
+        ];
+    }
 }

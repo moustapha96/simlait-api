@@ -3,37 +3,30 @@
 
 namespace App\Controller;
 
-use App\Entity\Departement;
 use App\Repository\CollecteRepository;
 use App\Repository\ConditionnementsRepository;
 use App\Repository\DepartementRepository;
 use App\Repository\EmballageRepository;
 use App\Repository\ProduitsRepository;
 use App\Repository\RegionRepository;
+use App\Repository\SaisonRepository;
+use App\Repository\TableCounterRepository;
 use App\Repository\UnitesRepository;
 use App\Repository\ZonesRepository;
-use DateTime;
-use Doctrine\DBAL\Types\Type;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Query\ResultSetMapping;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
-use App\Controller\EntityManagerInterface;
-use App\Doctrine\ReopeningEntityManagerInterface;
-use Doctrine\ORM\EntityManagerInterface as ORMEntityManagerInterface;
-use DoctrineExtensions\Query\Mysql\Date;
-use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\ExpressionLanguage\Node\ConditionalNode;
-use Symfony\Component\Mailer\MailerInterface;
-use Symfony\Component\Mime\Address;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class StatController extends AbstractController
 {
-    public function __construct()
+    private $serializer;
+    public function __construct(SerializerInterface $serializer)
     {
+
+        $this->serializer = $serializer;
     }
 
     //nbre de collecte par profil
@@ -44,19 +37,19 @@ class StatController extends AbstractController
     {
 
         try {
-            $unites = $collecteRepository->groupCollectebyProfil();
+            $unites = $collecteRepository->getProduitByProfil();
 
             $resultats = array();
             foreach ($unites as $m) {
                 $zone = array(
-                    'name' => $m['name'],
+                    'name' => $m['profil'],
                     'value' => $m['nbre']
                 );
                 $resultats[] = $zone;
             }
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -75,13 +68,13 @@ class StatController extends AbstractController
             foreach ($res as $value) {
 
                 if ($this->isExite($value['produit'], $resultats) == false) {
-                    $resultats[] = ['name' => $value['produit'], 'series' => $this->getSerie($value['produit'], $res)];
+                    $resultats[] = ['name' => $value['produit'] . " (" . $value['unite'] . ")", 'series' => $this->getSerie($value['produit'], $res)];
                 }
             }
 
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -129,10 +122,9 @@ class StatController extends AbstractController
 
             return new JsonResponse(['produit' => $produit, 'nbre' => $max], 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
-
 
     // nbre collecte Mois actuel sur mois passé
     /**
@@ -147,7 +139,7 @@ class StatController extends AbstractController
 
             return new JsonResponse(['now' => $resNow[0]['nbre'], 'previous' => $resP[0]['nbre']], 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -164,7 +156,7 @@ class StatController extends AbstractController
 
             return new JsonResponse(['now' => $resNow[0]['nbre'], 'previous' => $resP[0]['nbre']], 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -178,7 +170,6 @@ class StatController extends AbstractController
 
 
         try {
-
             $resN = $collecteRepository->getProduitPlusCollecterNow();
             $resP = $collecteRepository->getProduitPlusCollectePrevious();
 
@@ -203,7 +194,7 @@ class StatController extends AbstractController
                 'profilPrevious' => $maxPreviousProfil, 'maxPrevious' => $maxPr
             ], 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -226,7 +217,7 @@ class StatController extends AbstractController
             }
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -239,28 +230,51 @@ class StatController extends AbstractController
     {
         try {
             if ($request->getMethod() == "GET") {
-                $collectes = $repo->findLast('', '');
+
+                $collectes = $repo->findBy(array(), array('id' => 'DESC'), 10);
+                $jsonData = $this->serializer->serialize($collectes, 'json');
+                return new JsonResponse(json_decode($jsonData, true), 200);
             } else if ($request->getMethod() == "POST") {
+
                 $data = json_decode($request->getContent(), true);
                 $dateDebut = $data['dateDebut'];
                 $dateFin = $data['dateFin'];
                 $collectes = $repo->findLast($dateDebut, $dateFin);
             } else {
+
                 return new JsonResponse([], 200, ["Content-Type" => "application/json"]);
             }
 
 
             $resultats = array();
             foreach ($collectes as $m) {
-                dump($m);
                 $resultats[] = $m->asArray();
             }
-            // dd();
+
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
+
+
+    //stat collecte certifier 
+    /**
+     * @Route("/api/getStatCollectescertified", name="app_get_stat_collecte",methods={"GET"})
+     */
+    public function getStatCollecteCertified(CollecteRepository $collecteRepository, TableCounterRepository $tableCounterRepository): JsonResponse
+    {
+        $collecteCertified = $tableCounterRepository->findOneBy(['name' => 'collecteCertified']) ? $tableCounterRepository->findOneBy(['name' => 'collecteCertified'])->getValue() : 0;
+        $collecteNonCertified = $tableCounterRepository->findOneBy(['name' => 'collecteNonCertified']) ? $tableCounterRepository->findOneBy(['name' => 'collecteNonCertified'])->getValue() : 0;
+        $collectes = count($collecteRepository->findAll());
+
+        return new JsonResponse([
+            'collecteCertified' => $collecteCertified,
+            'collectes' => $collectes,
+            'collecteNonCertified' => $collecteNonCertified
+        ], 200, ["Content-Type" => "application/json"]);
+    }
+
 
     // collecte certifier 
     /**
@@ -287,7 +301,7 @@ class StatController extends AbstractController
             }
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -320,7 +334,7 @@ class StatController extends AbstractController
             }
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -353,7 +367,7 @@ class StatController extends AbstractController
             }
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -390,7 +404,7 @@ class StatController extends AbstractController
 
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -436,7 +450,7 @@ class StatController extends AbstractController
 
             return new JsonResponse($res_p_c, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -478,7 +492,7 @@ class StatController extends AbstractController
             }
             return new JsonResponse($res_p_c, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -522,7 +536,7 @@ class StatController extends AbstractController
             }
             return new JsonResponse($res_p_c, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -562,9 +576,10 @@ class StatController extends AbstractController
 
             return new JsonResponse($collectes, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
+
 
     //production 
     /**
@@ -614,11 +629,13 @@ class StatController extends AbstractController
                         'quantite_total' => $m['quantite_total'],
                         'prix_max' => $m['prix_max'],
                         'prix_min' => $m['prix_min'],
+                        'prix_moyen' => $m['prix_moyen'],
                         "unites" => $m["unites"],
                         "emballage" => $m["emballage"],
                         "quantite_perdu" => $m['quantite_perdu'],
                         "quantite_autre" => $m['quantite_autre'],
                         "quantite_vendu" => $m['quantite_vendu'],
+                        "unite" => $m['unite'],
                     );
                     $resultats[] = $coll;
                 }
@@ -641,11 +658,13 @@ class StatController extends AbstractController
                             'quantite_total' => 0,
                             'prix_max' => 0,
                             'prix_min' => 0,
+                            'prix_moyen' => 0,
                             "unites" => 'ND',
                             "emballage" => 'ND',
                             "quantite_perdu" => 0,
                             "quantite_vendu" => 0,
                             "quantite_autre" => 0,
+                            "unite" => $pro->getUnite()
                         );
                         $resultats[] = $coll;
                     }
@@ -670,6 +689,7 @@ class StatController extends AbstractController
                                 "quantite_perdu" => 0,
                                 "quantite_vendu" => 0,
                                 "quantite_autre" => 0,
+                                "unite" => $pro->getUnite()
                             );
                             $resultats[] = $coll;
                         }
@@ -679,7 +699,7 @@ class StatController extends AbstractController
 
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -714,6 +734,7 @@ class StatController extends AbstractController
                         "quantite_perdu" => $m['quantite_perdu'],
                         "quantite_autre" => $m['quantite_autre'],
                         "quantite_vendu" => $m['quantite_vendu'],
+                        "unite" => $m['unite'],
                     );
                     $resultats[] = $coll;
                 }
@@ -723,7 +744,7 @@ class StatController extends AbstractController
             // dd($resultats);
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -777,7 +798,8 @@ class StatController extends AbstractController
                     'zone' => $m['zone'],
                     'departement' => $m['departement'],
                     'quantite' => $m['quantite'],
-                    'emballage' => $m['emballage']
+                    'emballage' => $m['emballage'],
+                    'unite' => $m['unite'],
                 );
                 $resultats[] = $coll;
             }
@@ -785,7 +807,7 @@ class StatController extends AbstractController
 
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -809,7 +831,7 @@ class StatController extends AbstractController
             // dd($resultats);
             return new JsonResponse($resultats, 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -830,5 +852,239 @@ class StatController extends AbstractController
         ];
 
         return new JsonResponse($table, 200);
+    }
+
+    #[Route(
+        'api/collectesEvolutionQuantite',
+        name: 'app_collecte_evolution_quantite',
+        methods: ['GET', 'POST']
+    )]
+    public function evlocutionCollecteQuantite(
+        Request $request,
+        CollecteRepository $collecteRepository
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+
+        if ($request->getMethod() == "POST") {
+            $dateDebut = $data['dateDebut'];
+            $dateFin = $data['dateFin'];
+            $collectes = $collecteRepository->getCollecteEvolution($dateDebut, $dateFin);
+        } else {
+            $collectes = $collecteRepository->getCollecteEvolution(null, null);
+        }
+
+
+
+
+
+        $resultats = [];
+        foreach ($collectes as $collecte) {
+            $profil = $collecte['profil'];
+
+            $dataItem = [
+                'name' => $collecte['date']->format('Y-m-d'),
+                'value' => (int) $collecte['quantite']
+            ];
+
+            if (isset($resultats[$profil])) {
+                $resultats[$profil]['series'][] = $dataItem;
+            } else {
+                $resultats[$profil] = [
+                    'name' => $profil,
+                    'series' => [$dataItem]
+                ];
+            }
+        }
+
+        // Add missing dates with a value of 0
+        $allDates = []; // Array to store all unique dates
+        foreach ($resultats as &$profilData) {
+            $series = &$profilData['series'];
+            foreach ($series as $dataItem) {
+                $allDates[] = $dataItem['name'];
+            }
+        }
+
+        $allDates = array_unique($allDates); // Remove duplicate dates
+        $allDates = array_values($allDates); // Reset array keys
+
+        foreach ($resultats as &$profilData) {
+            $series = &$profilData['series'];
+            $existingDates = array_column($series, 'name');
+            $missingDates = array_diff($allDates, $existingDates);
+
+            foreach ($missingDates as $date) {
+                $series[] = [
+                    'name' => $date,
+                    'value' => 0
+                ];
+            }
+
+            usort($series, function ($a, $b) {
+                return strtotime($a['name']) - strtotime($b['name']);
+            });
+        }
+
+
+        return new JsonResponse($resultats, 200, ['Content-Type' => 'application/json']);
+    }
+
+    #[Route(
+        'api/collectesEvolutionPrix',
+        name: 'app_collecte_evolution_prix',
+        methods: ['GET', 'POST']
+    )]
+    public function evlocutionCollectePrix(
+        Request $request,
+        CollecteRepository $collecteRepository
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+
+        if ($request->getMethod() == "POST") {
+            $dateDebut = $data['dateDebut'];
+            $dateFin = $data['dateFin'];
+            $collectes = $collecteRepository->getCollecteEvolutionPrix($dateDebut, $dateFin);
+        } else {
+            $collectes = $collecteRepository->getCollecteEvolutionPrix(null, null);
+        }
+
+
+        $resultats = [];
+        foreach ($collectes as $collecte) {
+            $profil = $collecte['profil'];
+
+            $dataItem = [
+                'name' => $collecte['date']->format('Y-m-d'),
+                'value' =>  (int) $collecte['prix']
+            ];
+
+            if (isset($resultats[$profil])) {
+                $resultats[$profil]['series'][] = $dataItem;
+            } else {
+                $resultats[$profil] = [
+                    'name' => $profil,
+                    'series' => [$dataItem]
+                ];
+            }
+        }
+
+        // Add missing dates with a value of 0
+        $allDates = []; // Array to store all unique dates
+        foreach ($resultats as &$profilData) {
+            $series = &$profilData['series'];
+            foreach ($series as $dataItem) {
+                $allDates[] = $dataItem['name'];
+            }
+        }
+
+        $allDates = array_unique($allDates); // Remove duplicate dates
+        $allDates = array_values($allDates); // Reset array keys
+
+        foreach ($resultats as &$profilData) {
+            $series = &$profilData['series'];
+            $existingDates = array_column($series, 'name');
+            $missingDates = array_diff($allDates, $existingDates);
+
+            foreach ($missingDates as $date) {
+                $series[] = [
+                    'name' => $date,
+                    'value' => 0
+                ];
+            }
+
+            usort($series, function ($a, $b) {
+                return strtotime($a['name']) - strtotime($b['name']);
+            });
+        }
+
+
+        return new JsonResponse($resultats, 200, ['Content-Type' => 'application/json']);
+    }
+
+    #[Route(
+        'api/collectesEvolutionSaison',
+        name: 'app_collecte_evolution_saison',
+        methods: ['GET', 'POST']
+    )]
+    public function evolutionCollecteSaison(
+        Request $request,
+        CollecteRepository $collecteRepository,
+        SaisonRepository $saisonRepository
+    ): JsonResponse {
+
+        $saisons = $saisonRepository->findAll();
+
+
+        $data = json_decode($request->getContent(), true);
+
+        // if ($request->getMethod() == "POST") {
+        //     $dateDebut = $data['dateDebut'];
+        //     $dateFin = $data['dateFin'];
+        //     $collectes = $collecteRepository->getCollecteEvolutionQuantite($dateDebut, $dateFin);
+        // } else {
+        //     $collectes = $collecteRepository->getCollecteEvolutionQuantite(null, null);
+        // }
+
+        $resultats_all = [];
+        foreach ($saisons as  $value) {
+
+            $collectes = $collecteRepository->getCollecteEvolutionSaison(
+                $value->getDebut()->format('Y-m-d'),
+                $value->getFin()->format('Y-m-d')
+            );
+
+            $resultats = [];
+            $resultats = [];
+            foreach ($collectes as $collecte) {
+                $profil = $collecte['profil'];
+                $dataItem = [
+                    'name' => $collecte['date']->format('Y-m-d'),
+                    'value' => (int) $collecte['prix'],
+                    'quantite' => (int) $collecte['quantite']
+                ];
+
+                if (isset($resultats[$profil])) {
+                    $resultats[$profil]['series'][] = $dataItem;
+                } else {
+                    $resultats[$profil] = [
+                        'name' => $profil,
+                        'series' => [$dataItem]
+                    ];
+                }
+            }
+            $allDates = [];
+            foreach ($resultats as &$profilData) {
+                $series = &$profilData['series'];
+                foreach ($series as $dataItem) {
+                    $allDates[] = $dataItem['name'];
+                }
+            }
+
+            $allDates = array_unique($allDates);
+            $allDates = array_values($allDates);
+
+            foreach ($resultats as &$profilData) {
+                $series = &$profilData['series'];
+                $existingDates = array_column($series, 'name');
+                $missingDates = array_diff($allDates, $existingDates);
+
+                foreach ($missingDates as $date) {
+                    $series[] = [
+                        'name' => $date,
+                        'value' => 0,
+                        'quantite' => 0
+                    ];
+                }
+
+                usort($series, function ($a, $b) {
+                    return strtotime($a['name']) - strtotime($b['name']);
+                });
+            }
+            $resultats_all[$value->getNom() . '-' . $value->getAnnee()] = $resultats;
+        }
+
+        return new JsonResponse($resultats_all, 200, ['Content-Type' => 'application/json']);
     }
 }

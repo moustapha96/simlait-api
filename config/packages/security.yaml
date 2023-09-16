@@ -13,6 +13,7 @@ security:
       entity:
         class: App\Entity\User
         property: email
+
     chain_provider:
       chain:
         providers: [phone_provider, email_provider]
@@ -21,6 +22,7 @@ security:
       entity:
         class: App\Entity\User
         property: phone
+
     email_provider:
       entity:
         class: App\Entity\User
@@ -51,12 +53,8 @@ security:
   access_control:
     - { path: ^/api, roles: PUBLIC_ACCESS }
     - { path: ^/api/docs, roles: PUBLIC_ACCESS } # Allows accessing API documentations and Swagger UI
-    #  - { path: ^/api/users/connected, roles: PUBLIC_ACCESS , methods: 'GET' }
-    #        - { path: ^/api/authentication_token, roles: PUBLIC_ACCESS }
-    #        - { path: ^/, roles: IS_AUTHENTICATED_FULLY }
     - { path: ^/, roles: PUBLIC_ACCESS } # todo: to remove juste pour enlever la security
     - { path: ^/users/register, roles: PUBLIC_ACCESS }
-    #  - { path: ^/api/regions, roles: IS_AUTHENTICATED_ANONYMOUSLY }
     - { path: ^/api/reset-password, roles: PUBLIC_ACCESS }
 
   role_hierarchy:

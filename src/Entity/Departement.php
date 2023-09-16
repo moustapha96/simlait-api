@@ -12,8 +12,10 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ApiResource(
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
-    
+
 )]
+
+#[ORM\Table(name: '`simlait_departements`')]
 class Departement
 {
     #[ORM\Id]
@@ -33,19 +35,26 @@ class Departement
     #[ORM\ManyToOne(targetEntity: Zones::class, inversedBy: 'departements')]
     #[Groups(["read", "write"])]
     protected $zones;
-    
 
-    // #[ORM\OneToMany(mappedBy: 'departement', targetEntity: Laiterie::class)]
-    // #[Groups(["write"])]
-    // public $laiteries;
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["read", "write"])]
+    private ?string $longitude = null;
 
-    // #[ORM\ManyToOne(targetEntity: Region::class )]
-    // #[Groups(["read", "write"])]
-    // #[ORM\JoinColumn(nullable: false)]
-    // private $region;
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups(["read", "write"])]
+    private ?string $latitude = null;
 
 
- 
+    public $data_localisation;
+
+    public function __construct()
+    {
+    }
+
+    public function __toString()
+    {
+        return sprintf('Departement #%d', $this->getId());
+    }
 
     public function getId(): ?int
     {
@@ -54,6 +63,7 @@ class Departement
 
     public function getNom(): ?string
     {
+
         return $this->nom;
     }
 
@@ -64,17 +74,7 @@ class Departement
         return $this;
     }
 
-    // public function getRegion(): ?Region
-    // {
-    //     return $this->region;
-    // }
 
-    // public function setRegion(?Region $region): self
-    // {
-    //     $this->region = $region;
-
-    //     return $this;
-    // }
 
     public function getRegion(): ?Region
     {
@@ -106,7 +106,94 @@ class Departement
             "id" => $this->id,
             "nom" => $this->nom,
             "region" => $this->region->asArray(),
-            "zones" => $this->zones
+            "zones" =>  $this->zones ? $this->zones->asArraygetWithOutDepartement() : null,
+            "latitude" => $this->getLatitude(),
+            "longitude" => $this->getLongitude()
         ];
+    }
+
+    public function asArrayUser(): ?array
+    {
+        return [
+            "id" => $this->id,
+            "nom" => $this->nom,
+            "region" => [
+                "id" => $this->region->getId(),
+                "nom" => $this->region->getNom()
+            ],
+            "zone" =>  $this->getZones() != null ? [
+                "id" => $this->getZones()->getId(),
+                "nom" => $this->getZones()->getNom()
+            ] : null,
+            "latitude" => $this->getLatitude(),
+            "longitude" => $this->getLongitude()
+        ];
+    }
+
+    public function asArraySimple(): ?array
+    {
+        return [
+            "id" => $this->id,
+            "nom" => $this->nom,
+            "region" => [
+                "id" => $this->region->getId(),
+                "nom" => $this->region->getNom()
+            ],
+            "zone" => $this->getZones() != null ? [
+                "id" => $this->getZones()->getId(),
+                "nom" => $this->getZones()->getNom(),
+                "description" => $this->getZones()->getDescription(),
+                "statut" => $this->getZones()->getStatut(),
+            ] : null,
+            "latitude" => $this->getLatitude(),
+            "longitude" => $this->getLongitude()
+        ];
+    }
+
+    public function getLongitude(): ?string
+    {
+        return $this->longitude;
+    }
+
+    public function setLongitude(?string $longitude): self
+    {
+
+        $file = 'config/coordinates.json';
+        $jsonData = file_get_contents($file);
+        $data_localisation = json_decode($jsonData, true);
+
+        $this->longitude = $longitude;
+        if (empty($longitude)) {
+            $nom = $this->getNom();
+            if (isset($data_localisation[$nom]['longitude'])) {
+                $this->longitude = $data_localisation[$nom]['longitude'];
+            }
+        }
+
+
+        return $this;
+    }
+
+    public function getLatitude(): ?string
+    {
+        return $this->latitude;
+    }
+
+    public function setLatitude(?string $latitude): self
+    {
+
+        $file = 'config/coordinates.json';
+        $jsonData = file_get_contents($file);
+        $data_localisation = json_decode($jsonData, true);
+
+        $this->latitude = $latitude;
+        if (empty($latitude)) {
+            $nom = $this->getNom();
+            if (isset($data_localisation[$nom]['latitude'])) {
+                $this->latitude = $data_localisation[$nom]['latitude'];
+            }
+        }
+
+        return $this;
     }
 }

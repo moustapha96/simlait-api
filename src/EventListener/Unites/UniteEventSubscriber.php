@@ -48,7 +48,7 @@ class UniteEventSubscriber implements EventSubscriberInterface
        
         $noti = new Notification();
         $date = new \DateTime();
-        $noti->setMessage("une nouvelle unité vien d'etre enregistrer");
+        $noti->setMessage("une nouvelle unité vient d'etre enregistrer");
         $noti->setTitre("Nouvelle Unité");
         $noti->setDate(new \DateTime());
         $noti->setDateExpirat($date->modify('+7 day'));

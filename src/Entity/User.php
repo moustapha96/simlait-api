@@ -6,8 +6,7 @@ use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
-use Doctrine\DBAL\Types\BlobType;
-use Doctrine\DBAL\Types\TextType;
+
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -17,16 +16,18 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Serializer\Annotation\Groups;
 
 
-#[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
-#[UniqueEntity(fields: ['phone'], message: 'There is already an account with this phone')]
+#[UniqueEntity(fields: ['email'], message: 'Cet e-mail est déjà utilisé par un autre utilisateur')]
+#[UniqueEntity(fields: ['phone'], message: 'Ce numéro de téléphone est déjà utilisé')]
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[
     ApiResource(
         normalizationContext: ['groups' => ['read']],
-        denormalizationContext: ['groups' => ['write']]
+        denormalizationContext: ['groups' => ['write']],
+        order: ['id' => 'DESC'],
     )
 ]
 
+#[ORM\Table(name: '`simlait_users`')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -36,12 +37,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private $id;
 
     #[ORM\Column(type: 'string', nullable: true, length: 255, unique: true)]
+    // #[Assert\NotBlank()]
     #[Groups(["read", "write"])]
     private $email;
 
     #[ORM\Column(type: 'json')]
     #[Groups(["read", "write"])]
     private $roles = [];
+
+    #[ORM\Column(type: 'json')]
+    #[Groups(["read", "write"])]
+    private $zoneIntervention = [];
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Groups(["read", "write"])]
@@ -65,7 +71,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Groups(["read", "write"])]
     private $enabled;
 
-    #[Assert\NotBlank(groups: ['POST'])]
     #[ORM\Column(type: 'string', length: 10, unique: true)]
     #[Groups(["read", "write"])]
     private $phone;
@@ -112,6 +117,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $pass = null;
 
 
+    #[ORM\ManyToOne(targetEntity: Departement::class)]
+    #[Groups(["read", "write"])]
+    private $departement;
+
 
     public function __construct()
     {
@@ -152,7 +161,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getRoles(): array
     {
         $roles = $this->roles;
-        $roles[] = 'ROLE_USER';
+        // $roles[] = 'ROLE_USER';
 
         return array_unique($roles);
     }
@@ -223,28 +232,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
-    private function sanitizePhoneNumber(string $phoneNumber)
-    {
-        return str_replace('+', '', $phoneNumber);
-    }
 
-    // public function setPhone(string $phone): self
-    // {
-    //     // $sanitizedPhoneNumber = $this->sanitizePhoneNumber($phone);
-    //     $this->validatePhoneNumber($phone);
-    //     $this->phone = $phone;
-
-    //     return $this;
-    // }
-
-    private function validatePhoneNumber(string $phoneNumber)
-    {
-        if (!preg_match('/^(76|77|78)\[1-9][0-9]{7}$/', $phoneNumber)) {
-            throw new \InvalidArgumentException(
-                'Please provide phone number in E164 format without the \'+\' symbol'
-            );
-        }
-    }
 
 
     public function getStatus(): ?string
@@ -266,8 +254,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        if ($this->email != null) {
+            return (string) $this->email;
+        } else {
+            return (string) $this->phone;
+        }
+        return (string) $this->phone;
     }
+
     public function getUsername(): string
     {
         return (string) $this->getUserIdentifier();
@@ -464,6 +458,58 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setAvatar(string $avatar): self
     {
         $this->avatar = $avatar;
+
+        return $this;
+    }
+
+    public function asArray(): array
+    {
+
+        $data = [
+            'id' => $this->getId(),
+            'username' => $this->getUsername(),
+            'email' => $this->getEmail(),
+            'roles' => $this->getRoles(),
+            'zoneIntervention' => $this->getZoneIntervention(),
+            'firstName' => $this->getFirstName(),
+            'lastName' => $this->getLastName(),
+            'phone' => $this->getPhone(),
+            'enabled' => $this->getEnabled(),
+            'isActiveNow' => $this->getIsActiveNow(),
+            'lastActivityAt' => $this->getLastActivityAt(),
+            'sexe' => $this->getSexe(),
+            'status' => $this->getStatus(),
+            'adresse' => $this->getAdresse(),
+            'sent' => $this->getSent(),
+            'received' => $this->getReceived(),
+            'avatar' => $this->getAvatar(),
+            'departement' => $this->departement->asArrayUser() ? $this->departement->asArrayUser() : null
+        ];
+        return $data;
+    }
+
+    public function getDepartement(): ?Departement
+    {
+        return $this->departement;
+    }
+
+    public function setDepartement(?Departement $departement): self
+    {
+        $this->departement = $departement;
+
+        return $this;
+    }
+
+    public function getZoneIntervention(): array
+    {
+        $zoneIntervention = $this->zoneIntervention ? $this->zoneIntervention : [];
+        // $roles[] = 'ROLE_USER';
+        return array_unique($zoneIntervention);
+    }
+
+    public function setZoneIntervention(array $zoneIntervention): self
+    {
+        $this->zoneIntervention = $zoneIntervention;
 
         return $this;
     }

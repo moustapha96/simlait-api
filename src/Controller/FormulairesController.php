@@ -93,7 +93,7 @@ class FormulairesController extends AbstractController
             $content = $response->toArray(FALSE);
             return new JsonResponse($content, $statusCode);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -139,7 +139,7 @@ class FormulairesController extends AbstractController
             $content = $response->toArray(FALSE);
             return new JsonResponse($content, $statusCode);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
     /**
@@ -170,7 +170,7 @@ class FormulairesController extends AbstractController
             $content = $response->toArray(FALSE);
             return new JsonResponse($content, $statusCode);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 
@@ -202,7 +202,7 @@ class FormulairesController extends AbstractController
             $content = $response->toArray(FALSE);
             return new JsonResponse($content, $statusCode);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 

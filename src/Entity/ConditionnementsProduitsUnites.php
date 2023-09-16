@@ -8,6 +8,8 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ConditionnementsProduitsUnitesRepository::class)]
 #[ApiResource]
+
+#[ORM\Table(name: '`simlait_conditionnement_produit_unites`')]
 class ConditionnementsProduitsUnites
 {
     #[ORM\Id]
@@ -24,7 +26,7 @@ class ConditionnementsProduitsUnites
     #[ORM\Column(type: 'datetime_immutable')]
     private $createdAt;
 
-    #[ORM\ManyToOne(targetEntity: Unites::class )]
+    #[ORM\ManyToOne(targetEntity: Unites::class)]
     #[ORM\JoinColumn(nullable: false)]
     private $unites;
 
@@ -80,8 +82,4 @@ class ConditionnementsProduitsUnites
 
         return $this;
     }
-
-
-
-
 }

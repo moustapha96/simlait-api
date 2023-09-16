@@ -77,29 +77,6 @@ class MyUniteDemandesController extends AbstractController
 
             try {
 
-                $baseurl = $this->config->get("sms_gateway_baseurl");
-                $apikey = $this->config->get("sms_gateway_apikey");
-                $apikeyPrefix = $this->config->get("sms_gateway_apikeyprefix");
-
-                $configuration = (new Configuration())
-                    ->setHost($baseurl)
-                    ->setApiKeyPrefix('Authorization', $apikeyPrefix)
-                    ->setApiKey('Authorization', $apikey);
-
-                $client = new \GuzzleHttp\Client();
-                $sendSmsApi = new SendSmsApi($client, $configuration);
-
-                // 2. Create message object with destination
-                $smsDestination = new \Infobip\Model\SmsDestination();
-                $destination = $smsDestination->setTo($desti);
-                $message = (new SmsTextualMessage())
-                    ->setFrom($objet)
-                    ->setText($messageOri)
-                    ->setDestinations([$destination]);
-                // 3. Create message request with all the messages that you want to send
-                $request = (new SmsAdvancedTextualRequest())->setMessages([$message]);
-                // 4. Send !
-                $smsResponse = $sendSmsApi->sendSmsMessage($request);
                 // return new Response("Message bien transmis !! $smsResponse ");
                 return new JsonResponse(['message bien trasmit'], 200, ["Content-Type" => "application/json"]);
             } catch (\Throwable $apiException) {
@@ -150,7 +127,7 @@ class MyUniteDemandesController extends AbstractController
 
             return new JsonResponse(['creer'], 200, ["Content-Type" => "application/json"]);
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 }

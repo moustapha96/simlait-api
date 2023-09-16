@@ -14,8 +14,10 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ApiResource(
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
-    
+
 )]
+
+#[ORM\Table(name: '`simlait_regions`')]
 class Region
 {
     #[ORM\Id]
@@ -41,6 +43,11 @@ class Region
     public function __construct()
     {
         $this->departement = new ArrayCollection();
+    }
+
+    public function __toString()
+    {
+        return sprintf('region #%d', $this->getId());
     }
 
     public function getId(): ?int
@@ -94,6 +101,14 @@ class Region
         return [
             "id" => $this->id,
             "nom" => $this->nom,
+        ];
+    }
+    public function asArraySimple(): ?array
+    {
+        return [
+            "id" => $this->id,
+            "nom" => $this->nom,
+
         ];
     }
 }

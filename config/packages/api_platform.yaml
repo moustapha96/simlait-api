@@ -1,22 +1,27 @@
 api_platform:
-    title: Sim Betails PDEPS Platform
-    version: 1.0.0
-    mapping:
-        paths: ['%kernel.project_dir%/src/Entity' ]
-    eager_loading:
-      force_eager: false
-    patch_formats:
-        json: ['application/merge-patch+json']
-    swagger:
-        versions: [3]
-        api_keys:
-          apiKey:
-            name: Authorization
-            type: header
-    # Mercure integration, remove if unwanted
-    mercure: ~
-    # Good cache defaults for REST APIs
-    defaults:
-        stateless: true
-        cache_headers:
-            vary: ['Content-Type', 'Authorization', 'Origin']
+  title: Sim Lait PDEPS Platform
+  collection:
+    order_parameter_name: "_order"
+    pagination:
+      enabled: true
+      items_per_page_parameter_name: itemsPerPage
+  version: 1.0.0
+  mapping:
+    paths: ["%kernel.project_dir%/src/Entity"]
+  eager_loading:
+    force_eager: false
+  patch_formats:
+    json: ["application/merge-patch+json"]
+  swagger:
+    versions: [3]
+    api_keys:
+      apiKey:
+        name: Authorization
+        type: header
+  mercure: ~
+  defaults:
+    stateless: true
+    pagination_client_enabled: true
+    pagination_client_items_per_page: true
+    cache_headers:
+      vary: ["Content-Type", "Authorization", "Origin"]

@@ -4,6 +4,7 @@
 namespace App\service;
 
 use App\Entity\TableCounter;
+use App\Repository\CollecteRepository;
 use App\Repository\TableCounterRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
@@ -11,6 +12,7 @@ use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ControllerEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\String\UnicodeString;
 
 /**
  * @Service()
@@ -23,11 +25,13 @@ class StartupTask  implements EventSubscriberInterface
     public $em;
     public $repo;
     public      $mailer;
-    public function __construct(EntityManagerInterface $em, MailerInterface $mailer, TableCounterRepository $repo)
+    public $repoCollecte;
+    public function __construct(EntityManagerInterface $em, MailerInterface $mailer, CollecteRepository $repoCollecte, TableCounterRepository $repo)
     {
         $this->em = $em;
         $this->repo = $repo;
         $this->mailer = $mailer;
+        $this->repoCollecte = $repoCollecte;
     }
 
     public static function getSubscribedEvents()
@@ -41,14 +45,16 @@ class StartupTask  implements EventSubscriberInterface
     {
         $request = $event->getRequest();
         $setting = [];
-        if ($request->isMethod('POST')) {
+        if ($request->isMethod('POST') || $request->isMethod('PUT')) {
             $tables = [
-                "zones", "user_mobile", "user", "unites",
-                "region", "profils", "produits", "emballage",
-                "departement", "collecte", "conditionnements"
+                "simlait_zones", "simlait_user_mobiles", "simlait_users", "simlait_unites",
+                "simlait_regions", "simlait_profils", "simlait_produits", "simlait_emballages",
+                "simlait_departements", "simlait_collectes", "simlait_conditionnements"
             ];
+
+            //prix min et prix max
             try {
-                $sql_low_price = 'SELECT MIN(prix) as prix_min FROM collecte';
+                $sql_low_price = 'SELECT MIN(prix) as prix_min FROM simlait_collectes';
                 $connT = $this->em->getConnection();
                 $stmtT = $connT->prepare($sql_low_price);
 
@@ -57,10 +63,10 @@ class StartupTask  implements EventSubscriberInterface
 
                 $tableCounter = $this->repo->findOneBy(['name' => 'prix_min']);
                 if ($tableCounter) {
-                    $tableCounter->setValue($rc);
+                    $tableCounter->setValue($rc ? $rc : 0);
                 } else {
                     $tableCounter = new TableCounter();
-                    $tableCounter->setValue($rc);
+                    $tableCounter->setValue($rc ? $rc : 0);
                     $tableCounter->setName("prix_min");
                 }
                 $this->em->persist($tableCounter);
@@ -69,30 +75,29 @@ class StartupTask  implements EventSubscriberInterface
                     'value' =>  $tableCounter->getValue()
                 );
             } catch (\Throwable $th) {
+                dump($th);
             }
-
+            //collecte certifier
             try {
-                $sql_certified = "SELECT SUM(CASE WHEN is_certified = 1 THEN 1 ELSE 0 END) AS collecteCertified,  SUM(CASE WHEN is_certified = 0 THEN 1 ELSE 0 END) AS collecteNonCertified FROM  collecte";
-                $connT = $this->em->getConnection();
-                $stmtT = $connT->prepare($sql_certified);
-                $resultSetT = $stmtT->executeQuery();
-                $rc = $resultSetT->fetchAllAssociative()[0];
-                $tableCounter = $this->repo->findOneBy(['name' => 'collecteCertified']);
 
+                $no_certifier = count($this->repoCollecte->findBy(['isCertified' => 0]));
+                $certified = count($this->repoCollecte->findBy(['isCertified' => 1]));
+
+                $tableCounter = $this->repo->findOneBy(['name' => 'collecteCertified']);
                 if ($tableCounter) {
-                    $tableCounter->setValue($rc['collecteCertified']);
+                    $tableCounter->setValue($certified);
                 } else {
                     $tableCounter = new TableCounter();
-                    $tableCounter->setValue($rc['collecteCertified']);
+                    $tableCounter->setValue($certified);
                     $tableCounter->setName("collecteCertified");
                 }
 
                 $tableCounterNon = $this->repo->findOneBy(['name' => 'collecteNonCertified']);
                 if ($tableCounterNon) {
-                    $tableCounterNon->setValue($rc['collecteNonCertified']);
+                    $tableCounterNon->setValue($no_certifier);
                 } else {
                     $tableCounterNon = new TableCounter();
-                    $tableCounterNon->setValue($rc['collecteNonCertified']);
+                    $tableCounterNon->setValue($no_certifier);
                     $tableCounterNon->setName("collecteNonCertified");
                 }
                 $this->em->persist($tableCounter);
@@ -103,9 +108,9 @@ class StartupTask  implements EventSubscriberInterface
                 );
             } catch (\Throwable $th) {
             }
-
+            //le produit le plus collecter
             try {
-                $sql_most_produit_collecte = "SELECT  p.nom AS produit,   COUNT(*) AS collecte_count FROM   collecte c   JOIN produits p ON c.produits_id = p.id GROUP BY   c.produits_id ORDER BY  collecte_count DESC LIMIT 1 ";
+                $sql_most_produit_collecte = "SELECT  p.nom AS produit,   COUNT(*) AS collecte_count FROM   simlait_collectes c   JOIN simlait_produits p ON c.produits_id = p.id GROUP BY   c.produits_id ORDER BY  collecte_count DESC LIMIT 1 ";
 
                 $connT = $this->em->getConnection();
                 $stmtT = $connT->prepare($sql_most_produit_collecte);
@@ -114,12 +119,11 @@ class StartupTask  implements EventSubscriberInterface
                 $rc = $resultSetT->fetchAllAssociative()[0];
 
                 $tableCounterName = $this->repo->findOneBy(['name' => "most_produit"]);
-                // $tableCounterValue = $this->repo->findOneBy(['name' => "most_produit_value"]);
                 if ($tableCounterName) {
-                    $tableCounterName->setValue($rc['produit'] . " : " . $rc['collecte_count']);
+                    $tableCounterName->setValue($rc['produit'] . " : " . $rc['collecte_count'] ? $rc['collecte_count'] : 0);
                 } else {
                     $tableCounterName = new TableCounter();
-                    $tableCounterName->setValue($rc['produit'] . " : " . $rc['collecte_count']);
+                    $tableCounterName->setValue($rc['produit'] . " : " . $rc['collecte_count'] ? $rc['collecte_count'] : 0);
                     $tableCounterName->setName("most_produit");
                 }
 
@@ -131,12 +135,13 @@ class StartupTask  implements EventSubscriberInterface
             } catch (\Throwable $th) {
             }
 
+            //collecte par type de profil
             try {
-                $sql_nbre_producteur = "SELECT  COUNT(*) AS collecte_count FROM collecte c 
-                        JOIN produits p ON c.produits_id = p.id 
-                        JOIN produits_profils pp ON p.id = pp.produits_id  
-                        JOIN profils pr ON pp.profils_id = pr.id 
+                $sql_nbre_producteur = "SELECT  COUNT(*) AS collecte_count FROM simlait_collectes c 
+                        JOIN simlait_unites u ON c.unites_id = u.id 
+                        JOIN simlait_profils pr ON u.profil_id = pr.id 
                         WHERE pr.nom = 'PRODUCTEUR' ";
+
                 $connT = $this->em->getConnection();
                 $stmtT = $connT->prepare($sql_nbre_producteur);
 
@@ -145,10 +150,10 @@ class StartupTask  implements EventSubscriberInterface
 
                 $tableCounter = $this->repo->findOneBy(['name' => 'PRODUCTEUR']);
                 if ($tableCounter) {
-                    $tableCounter->setValue($rc);
+                    $tableCounter->setValue($rc ? $rc : 0);
                 } else {
                     $tableCounter = new TableCounter();
-                    $tableCounter->setValue($rc);
+                    $tableCounter->setValue($rc ? $rc : 0);
                     $tableCounter->setName("PRODUCTEUR");
                 }
                 $this->em->persist($tableCounter);
@@ -157,13 +162,13 @@ class StartupTask  implements EventSubscriberInterface
                     'value' =>  $tableCounter->getValue()
                 );
             } catch (\Throwable $th) {
+                // dd($th);
             }
 
             try {
-                $sql_nbre_collecteur = "SELECT  COUNT(*) AS collecte_count FROM collecte c 
-                        JOIN produits p ON c.produits_id = p.id 
-                        JOIN produits_profils pp ON p.id = pp.produits_id  
-                        JOIN profils pr ON pp.profils_id = pr.id 
+                $sql_nbre_collecteur = "SELECT  COUNT(*) AS collecte_count FROM simlait_collectes c 
+                         JOIN simlait_unites u ON c.unites_id = u.id 
+                        JOIN simlait_profils pr ON u.profil_id = pr.id 
                         WHERE pr.nom = 'COLLECTEUR' ";
                 $connT = $this->em->getConnection();
                 $stmtT = $connT->prepare($sql_nbre_collecteur);
@@ -172,10 +177,10 @@ class StartupTask  implements EventSubscriberInterface
 
                 $tableCounter = $this->repo->findOneBy(['name' => 'COLLECTEUR']);
                 if ($tableCounter) {
-                    $tableCounter->setValue($rc);
+                    $tableCounter->setValue($rc ? $rc : 0);
                 } else {
                     $tableCounter = new TableCounter();
-                    $tableCounter->setValue($rc);
+                    $tableCounter->setValue($rc ? $rc : 0);
                     $tableCounter->setName("COLLECTEUR");
                 }
                 $this->em->persist($tableCounter);
@@ -187,10 +192,9 @@ class StartupTask  implements EventSubscriberInterface
             }
 
             try {
-                $sql_nbre_transformateur = "SELECT  COUNT(*) AS collecte_count FROM collecte c 
-                        JOIN produits p ON c.produits_id = p.id 
-                        JOIN produits_profils pp ON p.id = pp.produits_id  
-                        JOIN profils pr ON pp.profils_id = pr.id 
+                $sql_nbre_transformateur = "SELECT  COUNT(*) AS collecte_count FROM simlait_collectes c 
+                        JOIN simlait_unites u ON c.unites_id = u.id 
+                        JOIN simlait_profils pr ON u.profil_id = pr.id 
                         WHERE pr.nom = 'TRANSFORMATEUR' ";
                 $connT = $this->em->getConnection();
                 $stmtT = $connT->prepare($sql_nbre_transformateur);
@@ -199,10 +203,10 @@ class StartupTask  implements EventSubscriberInterface
 
                 $tableCounter = $this->repo->findOneBy(['name' => 'TRANSFORMATEUR']);
                 if ($tableCounter) {
-                    $tableCounter->setValue($rc);
+                    $tableCounter->setValue($rc ? $rc : 0);
                 } else {
                     $tableCounter = new TableCounter();
-                    $tableCounter->setValue($rc);
+                    $tableCounter->setValue($rc ? $rc : 0);
                     $tableCounter->setName("TRANSFORMATEUR");
                 }
                 $this->em->persist($tableCounter);
@@ -211,13 +215,13 @@ class StartupTask  implements EventSubscriberInterface
                     'value' =>  $tableCounter->getValue()
                 );
             } catch (\Throwable $th) {
+                // dd($th);
             }
 
             try {
-                $sql_nbre_commercant = "SELECT  COUNT(*) AS collecte_count FROM collecte c 
-                        JOIN produits p ON c.produits_id = p.id 
-                        JOIN produits_profils pp ON p.id = pp.produits_id  
-                        JOIN profils pr ON pp.profils_id = pr.id 
+                $sql_nbre_commercant = "SELECT  COUNT(*) AS collecte_count FROM simlait_collectes c 
+                        JOIN simlait_unites u ON c.unites_id = u.id 
+                        JOIN simlait_profils pr ON u.profil_id = pr.id 
                         WHERE pr.nom = 'COMMERCANT' ";
                 $connT = $this->em->getConnection();
                 $stmtT = $connT->prepare($sql_nbre_commercant);
@@ -226,10 +230,11 @@ class StartupTask  implements EventSubscriberInterface
 
                 $tableCounter = $this->repo->findOneBy(['name' => 'COMMERCANT']);
                 if ($tableCounter) {
-                    $tableCounter->setValue($rc);
+                    $tableCounter->setValue($rc ? $rc : 0);
                 } else {
                     $tableCounter = new TableCounter();
-                    $tableCounter->setValue($rc);
+
+                    $tableCounter->setValue($rc ? $rc : 0);
                     $tableCounter->setName("COMMERCANT");
                 }
                 $this->em->persist($tableCounter);
@@ -241,10 +246,9 @@ class StartupTask  implements EventSubscriberInterface
             }
 
             try {
-                $sql_nbre_eleveur = "SELECT  COUNT(*) AS collecte_count FROM collecte c 
-                        JOIN produits p ON c.produits_id = p.id 
-                        JOIN produits_profils pp ON p.id = pp.produits_id  
-                        JOIN profils pr ON pp.profils_id = pr.id 
+                $sql_nbre_eleveur = "SELECT  COUNT(*) AS collecte_count FROM simlait_collectes c 
+                        JOIN simlait_unites u ON c.unites_id = u.id 
+                        JOIN simlait_profils pr ON u.profil_id = pr.id 
                         WHERE pr.nom = 'ELEVEUR' ";
                 $connT = $this->em->getConnection();
                 $stmtT = $connT->prepare($sql_nbre_eleveur);
@@ -256,13 +260,13 @@ class StartupTask  implements EventSubscriberInterface
                     $tableCounter->setValue($rc);
                 } else {
                     $tableCounter = new TableCounter();
-                    $tableCounter->setValue($rc);
+                    $tableCounter->setValue($rc ? $rc : 0);
                     $tableCounter->setName("ELEVEUR");
                 }
                 $this->em->persist($tableCounter);
                 $setting[] = array(
                     'name' => $tableCounter->getName(),
-                    'value' =>  $tableCounter->getValue()
+                    'value' =>  $tableCounter->getValue() || 0
                 );
             } catch (\Throwable $th) {
             }
@@ -276,14 +280,17 @@ class StartupTask  implements EventSubscriberInterface
                     $r = $resultSetT->fetchAllAssociative();
                     $count = $r[0]['count'];
 
-                    $tableCounter = $this->repo->findOneBy(['name' => $table]);
+                    $mot = new UnicodeString($table);
+                    $name =  $mot->replace('simlait_', '');
+
+                    $tableCounter = $this->repo->findOneBy(['name' => $name]);
 
                     if ($tableCounter) {
                         $tableCounter->setValue($count);
                     } else {
                         $tableCounter = new TableCounter();
                         $tableCounter->setValue($count);
-                        $tableCounter->setName($table);
+                        $tableCounter->setName($name);
                     }
                     $setting[] = array(
                         'name' => $tableCounter->getName(),
@@ -292,16 +299,11 @@ class StartupTask  implements EventSubscriberInterface
 
                     $this->em->persist($tableCounter);
                 } catch (Exception $e) {
-                    $e =  sprintf('<error>Error occurred while counting rows in %s: %s</error>', $table, $e->getMessage());
+                    $e =  sprintf('<error>Error occurred while counting rows in %s: %s</error>', $name, $e->getMessage());
                     dump($e);
                 }
             }
-            $file = 'config/stats-db.json';
-            $dir = dirname($file);
-            if (!is_dir($dir)) {
-                mkdir($dir, 0775, true);
-            }
-            file_put_contents($file, json_encode($setting));
+
             $this->em->flush();
         }
     }

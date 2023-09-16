@@ -7,21 +7,18 @@ use App\Repository\UserMobileRepository;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Doctrine\Common\Collections\ArrayCollection;
 
-#[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
+// #[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 #[ORM\Entity(repositoryClass: UserMobileRepository::class)]
 #[ApiResource(
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
-
+    order: ['id' => 'DESC'],
 )]
+
+#[ORM\Table(name: '`simlait_user_mobiles`')]
 class UserMobile
 {
     #[ORM\Id]
@@ -32,9 +29,9 @@ class UserMobile
 
     #[ORM\Column(type: 'json')]
     #[Groups(["read", "write"])]
-    private $roles = [];
+    private $roles = ['ROLE_USER'];
 
-    #[ORM\Column(type: 'string', nullable: true, length: 255, unique: true)]
+    #[ORM\Column(type: 'string', nullable: true, length: 255)]
     #[Groups(["read", "write"])]
     private $email = null;
 
@@ -67,27 +64,18 @@ class UserMobile
     private $password;
 
 
-    #[ORM\ManyToOne(targetEntity: Region::class)]
+    #[ORM\ManyToOne(targetEntity: Region::class, cascade: ['persist'])]
     #[Groups(["write"])]
     private $region;
 
 
-    #[ORM\ManyToOne(targetEntity: Departement::class)]
+    #[ORM\ManyToOne(targetEntity: Departement::class, cascade: ['persist'])]
     #[Groups(["read", "write"])]
     private $departement;
-
-    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Vente::class)]
-    // #[Groups(["read", "write"])]
-    private $ventes;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Collecte::class)]
     #[Groups(["read", "write"])]
     private $collectes;
-
-
-    // #[ORM\Column(type: 'string', length: 255, nullable: true)]
-    // #[Groups(["read", "write"])]
-    // private $statut;
 
     #[ORM\Column(type: 'string', length: 255, nullable: true)]
     #[Groups(["read", "write"])]
@@ -100,12 +88,11 @@ class UserMobile
     // #[Groups(["read"])]
     private $unites;
 
-
     #[ORM\Column(type: 'boolean')]
     #[Groups(["read", "write"])]
     private $hasLaiteries;
 
-    #[ORM\ManyToOne(inversedBy: 'userMobile')]
+    #[ORM\ManyToOne(inversedBy: 'userMobile', cascade: ['persist'])]
     #[Groups(["read", "write"])]
     private ?Profils $profil = null;
 
@@ -113,17 +100,15 @@ class UserMobile
     #[Groups(["read", "write"])]
     private ?string $localite = null;
 
-    #[ORM\ManyToOne]
+    #[ORM\ManyToOne(cascade: ['persist'])]
     #[Groups(["read", "write"])]
     private ?Status $status = null;
 
     public function __construct()
     {
         $this->codeResetPasswords = new ArrayCollection();
-
-        $this->ventes = new ArrayCollection();
         $this->collectes = new ArrayCollection();
-        //        $this->unites = new ArrayCollection();
+        $this->unites = new ArrayCollection();
     }
 
 
@@ -217,7 +202,6 @@ class UserMobile
         return $this;
     }
 
-
     /**
      * @see UserInterface
      */
@@ -237,29 +221,6 @@ class UserMobile
     }
 
 
-    // public function getRegion(): ?string
-    // {
-    //     return $this->region;
-    // }
-
-    // public function setRegion(?string $region): self
-    // {
-    //     $this->region = $region;
-
-    //     return $this;
-    // }
-
-    // public function getDepartement(): ?string
-    // {
-    //     return $this->departement;
-    // }
-
-    // public function setDepartement(?string $departement): self
-    // {
-    //     $this->departement = $departement;
-
-    //     return $this;
-    // }
     public function getRegion(): ?Region
     {
         return $this->region;
@@ -283,28 +244,25 @@ class UserMobile
         return $this;
     }
 
-
-    // public function getStatut(): ?string
-    // {
-    //     return $this->statut;
-    // }
-
-    // public function setStatut(?string $statut): self
-    // {
-    //     $this->statut = $statut;
-
-    //     return $this;
-    // }
-
     public function getUuid(): ?string
     {
         return $this->uuid;
     }
 
+    public function generateUUID()
+    {
+        $data = openssl_random_pseudo_bytes(16);
+        $data[6] = chr(ord($data[6]) & 0x0f | 0x40); // Version 4
+        $data[8] = chr(ord($data[8]) & 0x3f | 0x80); // Variant RFC 4122
+        return vsprintf('%s-%s-%s-%s', str_split(bin2hex($data), 4));
+    }
+
     public function setUuid(?string $uuid): self
     {
+        if (!$uuid) {
+            $uuid = $this->generateUUID();
+        }
         $this->uuid = $uuid;
-
         return $this;
     }
 
@@ -344,7 +302,7 @@ class UserMobile
             'id' => $this->id,
             'prenom' => $this->prenom,
             'nom' => $this->nom,
-            'email' => $this->email,
+            'email' => $this->email ? $this->email : '',
             'telephone' => $this->telephone,
             'adresse' => $this->adresse,
             'sexe' => $this->sexe,
@@ -360,7 +318,33 @@ class UserMobile
             'profil' => $this->profil->asArray()
         ];
     }
-
+    public function asArrayCollecte(): array
+    {
+        $collectes = [];
+        foreach ($this->collectes as $c) {
+            $collectes[] = $c->asArray();
+        }
+        return [
+            'id' => $this->id,
+            'prenom' => $this->prenom,
+            'nom' => $this->nom,
+            'email' => $this->email,
+            'telephone' => $this->telephone,
+            'adresse' => $this->adresse,
+            'sexe' => $this->sexe,
+            'enabled' => $this->enabled,
+            'roles' => $this->roles,
+            'region' => $this->region->asArray(),
+            'departement' => $this->departement->asArray(),
+            'status' => $this->status->asArray(),
+            'uuid' => $this->uuid,
+            'password' => $this->password,
+            'hasLaiteries' => $this->hasLaiteries,
+            'localite' => $this->localite,
+            'profil' => $this->profil->asArray(),
+            'collectes' => $collectes
+        ];
+    }
 
 
 
@@ -385,35 +369,6 @@ class UserMobile
         return $this->hasLaiteries;
     }
 
-    /**
-     * @return Collection<int, Vente>
-     */
-    public function getVentes(): Collection
-    {
-        return $this->ventes;
-    }
-
-    public function addVente(Vente $vente): self
-    {
-        if (!$this->ventes->contains($vente)) {
-            $this->ventes->add($vente);
-            $vente->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeVente(Vente $vente): self
-    {
-        if ($this->ventes->removeElement($vente)) {
-            // set the owning side to null (unless already changed)
-            if ($vente->getUser() === $this) {
-                $vente->setUser(null);
-            }
-        }
-
-        return $this;
-    }
 
     /**
      * @return Collection<int, Collecte>
@@ -429,6 +384,20 @@ class UserMobile
             $this->collectes->add($collecte);
             $collecte->setUser($this);
         }
+
+        return $this;
+    }
+
+    public function setCollecte(array $collectes): self
+    {
+        $this->collectes = $collectes;
+        return $this;
+    }
+
+
+    public function clearCollectes(): self
+    {
+        $this->collectes->clear();
 
         return $this;
     }
@@ -501,13 +470,14 @@ class UserMobile
 
     public function getRoles(): array
     {
-        return $this->roles;
+        // $roles = $this->roles; 
+        $roles[] = 'ROLE_USER';
+        return array_unique($roles);
     }
 
     public function setRoles(array $roles): self
     {
         $this->roles = $roles;
-
         return $this;
     }
 

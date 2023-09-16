@@ -8,6 +8,8 @@ use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Core\Annotation\ApiResource;
 
 #[ApiResource]
+
+#[ORM\Table(name: '`simlait_parametrage_mobiles`')]
 #[ORM\Entity(repositoryClass: ParametrageMobileRepository::class)]
 class ParametrageMobile
 {
@@ -30,6 +32,12 @@ class ParametrageMobile
 
     #[ORM\Column]
     private ?bool $hasNotification = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $contactSupport = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $emailSupport = null;
 
     public function getId(): ?int
     {
@@ -92,6 +100,30 @@ class ParametrageMobile
     public function setHasNotification(bool $hasNotification): self
     {
         $this->hasNotification = $hasNotification;
+
+        return $this;
+    }
+
+    public function getContactSupport(): ?string
+    {
+        return $this->contactSupport;
+    }
+
+    public function setContactSupport(?string $contactSupport): self
+    {
+        $this->contactSupport = $contactSupport;
+
+        return $this;
+    }
+
+    public function getEmailSupport(): ?string
+    {
+        return $this->emailSupport;
+    }
+
+    public function setEmailSupport(?string $emailSupport): self
+    {
+        $this->emailSupport = $emailSupport;
 
         return $this;
     }

@@ -48,7 +48,7 @@ class MyCodeRessetPasswordController extends AbstractController
             // return new JsonResponse($user->asArray(), 200, ["Content-Type" => "application/json"]);
 
         } catch (\Exception $e) {
-            return new JsonResponse(['err' => $e->getMessage()], 500);
+            return new JsonResponse(['err' => $e->getMessage()], 400);
         }
     }
 }

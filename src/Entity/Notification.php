@@ -9,6 +9,8 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: NotificationRepository::class)]
 #[ApiResource]
+
+#[ORM\Table(name: '`simlait_notifications`')]
 class Notification
 {
     #[ORM\Id]

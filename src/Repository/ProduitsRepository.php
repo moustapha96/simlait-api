@@ -4,14 +4,8 @@ namespace App\Repository;
 
 use App\Entity\Produits;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\Query\AST\Join;
+
 use Doctrine\Persistence\ManagerRegistry;
-use App\Entity\Collecte;
-use DateTime;
-use Doctrine\ORM\Query\ResultSetMapping;
-use Doctrine\ORM\Query\ResultSetMappingBuilder;
-use PhpParser\Node\Expr\FuncCall;
-use Symfony\Bridge\Twig\Node\DumpNode;
 
 /**
  * @method Produits|null find($id, $lockMode = null, $lockVersion = null)
@@ -24,57 +18,6 @@ class ProduitsRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Produits::class);
-    }
-
-    // /**
-    //  * @return Produits[] Returns an array of Produits objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('p.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
-
-    /*
-    public function findOneBySomeField($value): ?Produits
-    {
-        return $this->createQueryBuilder('p')
-            ->andWhere('p.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
-
-
-    public function getPNoCollecte()
-    {
-        $qb = $this->createQueryBuilder('prod');
-        $qb->innerJoin('App\Entity\Collecte', 'collecte',  \Doctrine\ORM\Query\Expr\Join::WITH, 'produit.id <> collecte.produits');
-        $qb
-            ->addSelect('lait')->join('nocollecte.unites', 'lait')
-            ->addSelect('lait.nom as laiterie')
-            ->addSelect('emb')->join('collecte.emballages', 'emb')
-            ->addSelect('emb.nom as emballage')
-            ->addSelect('nocollecte')
-            ->addSelect('prod.nom as produit')
-            ->addSelect('MAX (nocollecte.prix) as prix_max')
-            ->addSelect('MIN (nocollecte.prix) as prix_min')
-            ->addSelect('SUM(nocollecte.quantite) as quantite_total')
-            // ->where('collecte.isCertified = true')
-            ->groupBy('prod.nom')
-
-            ->orderBy('prod.id', 'DESC');
-        return $qb->getQuery()->getResult();
     }
 
     public function getPCollecteDetail(string $produit, string $conditionnement)
@@ -97,6 +40,7 @@ class ProduitsRepository extends ServiceEntityRepository
             ->addSelect('emb.nom as emballage')
             ->addSelect('collecte')
             ->addSelect('prod.nom as produit')
+            ->addSelect('prod.unite as unite')
             ->addSelect('MAX (collecte.prix) as prix_max')
             ->addSelect('MIN (collecte.prix) as prix_min')
             ->addSelect('MIN (collecte.prix) as prix_min')
@@ -134,12 +78,6 @@ class ProduitsRepository extends ServiceEntityRepository
             $qb->innerJoin('App\Entity\Collecte', 'collecte',  \Doctrine\ORM\Query\Expr\Join::WITH, 'prod.id = collecte.produits');
             $qb
 
-                // ->leftJoin('collecte.produits', 'prod')
-                // ->leftJoin('collecte.unites', 'unit')
-                // ->leftJoin('collecte.emballages', 'emb')
-                // ->leftJoin('collecte.conditionnements', 'condi')
-
-                // ->innerJoin('App\Entity\Produits', 'prod', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.produits = prod')
                 ->innerJoin('App\Entity\Unites', 'unit', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.unites = unit')
                 ->innerJoin('App\Entity\Emballage', 'emb', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.emballages = emb')
                 ->innerJoin('App\Entity\Conditionnements', 'condi', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.conditionnements = condi')
@@ -156,14 +94,16 @@ class ProduitsRepository extends ServiceEntityRepository
                 ->addSelect('emb.nom as emballage')
                 ->addSelect('collecte')
                 ->addSelect('prod.nom as produit')
+                ->addSelect('prod.unite as unite')
                 ->addSelect('MAX (collecte.prix) as prix_max')
                 ->addSelect('MIN (collecte.prix) as prix_min')
+                ->addSelect('AVG (collecte.prix) as prix_moyen')
                 ->addSelect('SUM(collecte.quantite) as quantite_total')
                 ->addSelect('SUM(collecte.quantite_perdu) as quantite_perdu')
                 ->addSelect('SUM(collecte.quantite_autre) as quantite_autre')
                 ->addSelect('SUM(collecte.quantite_vendu) as quantite_vendu')
-
                 ->where('collecte.isCertified = true')
+                ->andWhere('unit.isCertified = true')
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('zon.nom', ':zone'),
                     $qb->expr()->like('depart.nom', ':departement'),
@@ -172,7 +112,6 @@ class ProduitsRepository extends ServiceEntityRepository
                     $qb->expr()->like('condi.nom', ':conditionnement'),
                     $qb->expr()->like('prod.nom', ':produit'),
                     $qb->expr()->like('emb.nom', ':emballage'),
-
                     $qb->expr()->between('collecte.dateCollecte', ':dateDebut', ':dateFin'),
 
                 )))
@@ -195,15 +134,9 @@ class ProduitsRepository extends ServiceEntityRepository
             $qb = $this->createQueryBuilder('prod');
             $qb->innerJoin('App\Entity\Collecte', 'collecte',  \Doctrine\ORM\Query\Expr\Join::WITH, 'prod.id = collecte.produits');
             $qb
-                // ->leftJoin('collecte.unites', 'unit')
-                // ->leftJoin('collecte.emballages', 'emb')
-                // ->leftJoin('collecte.conditionnements', 'condi')
-
-                // ->innerJoin('App\Entity\Produits', 'prod', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.produits = prod')
                 ->innerJoin('App\Entity\Unites', 'unit', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.unites = unit')
                 ->innerJoin('App\Entity\Emballage', 'emb', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.emballages = emb')
                 ->innerJoin('App\Entity\Conditionnements', 'condi', \Doctrine\ORM\Query\Expr\Join::WITH, 'collecte.conditionnements = condi')
-
 
                 ->innerJoin('App\Entity\Region', 'reg', \Doctrine\ORM\Query\Expr\Join::WITH, 'unit.region = reg')
                 ->innerJoin('App\Entity\Zones', 'zon', \Doctrine\ORM\Query\Expr\Join::WITH, 'unit.zone = zon')
@@ -215,13 +148,17 @@ class ProduitsRepository extends ServiceEntityRepository
                 ->addSelect('emb.nom as emballage')
                 ->addSelect('collecte')
                 ->addSelect('prod.nom as produit')
+                ->addSelect('prod.unite as unite')
                 ->addSelect('MAX (collecte.prix) as prix_max')
                 ->addSelect('MIN (collecte.prix) as prix_min')
+                ->addSelect('AVG (collecte.prix) as prix_moyen')
                 ->addSelect('SUM(collecte.quantite) as quantite_total')
                 ->addSelect('SUM(collecte.quantite_perdu) as quantite_perdu')
                 ->addSelect('SUM(collecte.quantite_autre) as quantite_autre')
                 ->addSelect('SUM(collecte.quantite_vendu) as quantite_vendu')
                 ->where('collecte.isCertified = true')
+                ->andWhere('unit.isCertified = true')
+
                 ->andWhere($qb->expr()->andX($qb->expr()->andX(
                     $qb->expr()->like('zon.nom', ':zone'),
                     $qb->expr()->like('depart.nom', ':departement'),
@@ -271,6 +208,7 @@ class ProduitsRepository extends ServiceEntityRepository
 
             ->addSelect('collecte')
             ->addSelect('prod.nom as produit')
+            ->addSelect('prod.unite as unite')
             ->addSelect('collecte.prix as prix')
             ->addSelect('collecte.quantite as quantite')
             ->addSelect('collecte.quantite_vendu as quantite_vendu')
@@ -278,6 +216,7 @@ class ProduitsRepository extends ServiceEntityRepository
             ->addSelect('collecte.quantite_perdu as quantite_perdu')
 
             ->where('collecte.isCertified = true')
+            ->andWhere('unit.isCertified = true')
 
             ->andWhere($qb->expr()->andX($qb->expr()->andX(
                 $qb->expr()->like('condi.nom', ':conditionnement'),
@@ -319,8 +258,6 @@ class ProduitsRepository extends ServiceEntityRepository
 
     public function findTransformateur()
     {
-        // $qb = $this->createQueryBuilder('prod');
-        // $qb->innerJoin('App\Entity\Profil', 'profil',  \Doctrine\ORM\Query\Expr\Join::WITH, 'prod.id = profil.produits');
 
         $qb = $this->createQueryBuilder('p');
         $qb->leftJoin('p.profils', 'profil')
@@ -332,8 +269,6 @@ class ProduitsRepository extends ServiceEntityRepository
     }
     public function findCollecteur()
     {
-        // $qb = $this->createQueryBuilder('prod');
-        // $qb->innerJoin('App\Entity\Profil', 'profil',  \Doctrine\ORM\Query\Expr\Join::WITH, 'prod.id = profil.produits');
 
         $qb = $this->createQueryBuilder('p');
         $qb->leftJoin('p.profils', 'profil')
@@ -351,7 +286,6 @@ class ProduitsRepository extends ServiceEntityRepository
     {
 
         $qb = $this->createQueryBuilder('p');
-        //  $qb->innerJoin('App\Entity\Profils', 'profil',  \Doctrine\ORM\Query\Expr\Join::WITH, 'p.profils = profil')
 
         $qb->leftJoin('p.profils', 'profil')
             ->leftJoin('p.conditionnements', 'condi')

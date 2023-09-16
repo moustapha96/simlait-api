@@ -17,6 +17,7 @@ class ConfigurationService
         $this->entityManager = $entityManager;
     }
 
+
     public function get(string $key)
     {
         $config = $this->entityManager

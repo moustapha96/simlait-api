@@ -48,14 +48,14 @@ class ConditionnementsRepository extends ServiceEntityRepository
     }
     */
 
-    public function getCondiProduit(string $produit)
-    {
+    // public function getCondiProduit(string $produit)
+    // {
 
-        $qb = $this->createQueryBuilder('c');
-        $qb->leftJoin('c.produits', 'p')
-            ->where('p.nom = :pro')
+    //     $qb = $this->createQueryBuilder('c');
+    //     $qb->leftJoin('c.produits', 'p')
+    //         ->where('p.nom = :pro')
 
-            ->setParameter('pro', $produit);
-        return $qb->getQuery()->getResult();
-    }
+    //         ->setParameter('pro', $produit);
+    //     return $qb->getQuery()->getResult();
+    // }
 }

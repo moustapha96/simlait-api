@@ -1,0 +1,178 @@
+{
+    "Dakar": {
+        "latitude": 14.7167,
+        "longitude": -17.4677
+    },
+    "Pikine": {
+        "latitude": 14.7667,
+        "longitude": -17.4083
+    },
+    "Guédiawaye": {
+        "latitude": 14.7704,
+        "longitude": -17.3986
+    },
+    "Rufisque": {
+        "latitude": 14.7167,
+        "longitude": -17.2667
+    },
+    "Thiès": {
+        "latitude": 14.7833,
+        "longitude": -16.9667
+    },
+    "Mbour": {
+        "latitude": 14.4210,
+        "longitude": -16.9635
+    },
+    "Tivaouane": {
+        "latitude": 14.9567,
+        "longitude": -16.8350
+    },
+    "Kaolack": {
+        "latitude": 14.1743,
+        "longitude": -16.2494
+    },
+    "Fatick": {
+        "latitude": 14.3387,
+        "longitude": -16.4115
+    },
+    "Kaffrine": {
+        "latitude": 14.1017,
+        "longitude": -15.5520
+    },
+    "Diourbel": {
+        "latitude": 14.6600,
+        "longitude": -16.2410
+    },
+    "Louga": {
+        "latitude": 15.6144,
+        "longitude": -16.2506
+    },
+    "Saint-Louis": {
+        "latitude": 16.0181,
+        "longitude": -16.4976
+    },
+    "Sébikotane": {
+        "latitude": 14.7786,
+        "longitude": -17.2172
+    },
+    "Bambey": {
+        "latitude": 14.7053,
+        "longitude": -16.4744
+    },
+    "Guinguinéo": {
+        "latitude": 14.2722,
+        "longitude": -15.9386
+    },
+    "Nioro du Rip": {
+        "latitude": 13.7458,
+        "longitude": -15.8114
+    },
+    "Bignona": {
+        "latitude": 12.8106,
+        "longitude": -16.2261
+    },
+    "Ziguinchor": {
+        "latitude": 12.5735,
+        "longitude": -16.2751
+    },
+    "Oussouye": {
+        "latitude": 12.4897,
+        "longitude": -16.5475
+    },
+    "Bounkiling": {
+        "latitude": 12.6827,
+        "longitude": -16.2816
+    },
+    "Sédhiou": {
+        "latitude": 12.7086,
+        "longitude": -15.5567
+    },
+    "Goudomp": {
+        "latitude": 12.5522,
+        "longitude": -15.8294
+    },
+    "Kolda": {
+        "latitude": 12.8808,
+        "longitude": -14.9425
+    },
+    "Médina Yoro Foulah": {
+        "latitude": 12.6750,
+        "longitude": -14.9778
+    },
+    "Vélingara": {
+        "latitude": 12.8517,
+        "longitude": -14.9278
+    },
+    "Koumpentoum": {
+        "latitude": 13.7553,
+        "longitude": -13.7889
+    },
+    "Ranérou": {
+        "latitude": 15.6072,
+        "longitude": -13.2358
+    },
+    "Kanel": {
+        "latitude": 15.4940,
+        "longitude": -13.1850
+    },
+    "Salémata": {
+        "latitude": 15.3094,
+        "longitude": -13.2422
+    },
+    "Kidira": {
+        "latitude": 14.1214,
+        "longitude": -12.9492
+    },
+    "Kédougou": {
+        "latitude": 12.5525,
+        "longitude": -12.1750
+    },
+    "Salemata": {
+        "latitude": 12.6239,
+        "longitude": -13.1017
+    },
+    "Saraya": {
+        "latitude": 12.8564,
+        "longitude": -12.4903
+    },
+    "Bakel": {
+        "latitude": 14.8928,
+        "longitude": -12.4600
+    },
+    "Goudiry": {
+        "latitude": 14.4278,
+        "longitude": -12.1394
+    },
+    "Dagana": {
+        "latitude": 16.5167,
+        "longitude": -14.7500
+    },
+    "Podor": {
+        "latitude": 16.6667,
+        "longitude": -14.9667
+    },
+    "Matam": {
+        "latitude": 15.6550,
+        "longitude": -13.2622
+    },
+    "Linguère": {
+        "latitude": 15.4000,
+        "longitude": -15.1167
+    },
+    "Birkelane": {
+        "latitude": 14.2667,
+        "longitude": -14.9167
+    },
+    "Malem Hodar": {
+        "latitude": 14.7833,
+        "longitude": -14.9333
+    },
+    "Koungheul": {
+        "latitude": 13.9817,
+        "longitude": -14.7997
+    },
+    "Tambacounda": {
+        "latitude": 13.7800,
+        "longitude": -13.6800
+    }
+}

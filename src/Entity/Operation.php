@@ -2,7 +2,6 @@
 
 namespace App\Entity;
 
-// use ApiPlatform\Metadata\ApiResource;
 
 use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\OperationRepository;
@@ -15,6 +14,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
 )]
+
+#[ORM\Table(name: '`simlait_operations`')]
 class Operation
 {
     #[ORM\Id]
@@ -38,6 +39,7 @@ class Operation
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Groups(["read", "write"])]
     private ?\DateTimeInterface $dateOperation = null;
+
 
     public function getId(): ?int
     {

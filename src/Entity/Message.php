@@ -13,6 +13,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
     normalizationContext: ['groups' => ['read']],
     denormalizationContext: ['groups' => ['write']],
 )]
+
+#[ORM\Table(name: '`simlait_messages`')]
 class Message
 {
     #[ORM\Id]
@@ -120,7 +122,6 @@ class Message
     public function setRecipient(?User $recipient): self
     {
         $this->recipient = $recipient;
-
         return $this;
     }
 }
